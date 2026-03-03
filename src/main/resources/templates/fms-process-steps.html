@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>FMS Process Steps</title>
+
+    <style>
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #132a63, #1f3c88);
+            color: #fff;
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar .brand span {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #e9efff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .logout-form {
+            margin-top: 18px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: none;
+            background: #f97316;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 24px;
+        }
+
+        :root {
+            --ink: #0f1b2d;
+            --slate: #5a6b7c;
+            --navy: #1f3c88;
+            --navy-deep: #152d6c;
+            --teal: #0aa6a6;
+            --bg: #f2f6fb;
+            --panel: #ffffff;
+            --shadow: 0 16px 34px rgba(10, 23, 47, 0.12);
+        }
+
+        body {
+            font-family: "Poppins", "Segoe UI", Tahoma, sans-serif;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(10, 166, 166, 0.12), transparent 45%),
+                radial-gradient(circle at 90% 10%, rgba(31, 60, 136, 0.16), transparent 45%),
+                var(--bg);
+            margin: 0;
+            color: var(--ink);
+        }
+
+        .header {
+            background: linear-gradient(120deg, var(--navy), #2847a7 55%, #1b66b0);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            top: -90px;
+            width: 220px;
+            height: 220px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .container {
+            padding: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--panel);
+            border: 1px solid #dde3ec;
+            box-shadow: var(--shadow);
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #dde3ec;
+            text-align: center;
+        }
+
+        th {
+            background: var(--navy);
+            color: white;
+        }
+
+        input,
+        select {
+            padding: 6px;
+            width: 90%;
+            border: 1px solid #cfd6dd;
+            border-radius: 6px;
+        }
+
+        .actions {
+            margin-top: 32px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .save-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .submit-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(34, 197, 94, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .icon-lg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--slate);
+            margin: 0 0 18px;
+        }
+
+        .breadcrumbs a {
+            color: var(--navy-deep);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .breadcrumbs span {
+            color: #9aa7b6;
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/admin-navbar :: navbar}"></th:block>
+
+    <div class="app-shell">
+        <main class="app-content">
+
+            <div class="header">
+                <h2 th:text="${companyName != null ? companyName + ' – Flow Management System' : 'Flow Management System'}">HQEPL – Flow Management System</h2>
+                <h3>ADMIN DASHBOARD</h3>
+            </div>
+
+            <div class="container">
+                <div class="breadcrumbs">
+                    <a href="/admin/dashboard">Home</a>
+                    <span>›</span>
+                    <a href="/admin/fms-list">Flows</a>
+                    <span>›</span>
+                    <a th:href="@{/admin/fms-process(folderId=${folderId})}">Order Details</a>
+                    <span>›</span>
+                    <span>Process Details</span>
+                </div>
+
+                <div class="top-actions">
+                    <button class="add-btn" onclick="addRow()" aria-label="Add row">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="post" action="/admin/fms-process" onsubmit="return confirmSubmitProcess()">
+                    <input type="hidden" name="folderId" th:value="${folderId}">
+                    <input type="hidden" name="edit" th:value="${editMode}">
+                    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                    <div style="display:none">
+                        <select id="employeeSelectTemplate">
+                            <option value="">Select</option>
+                            <option th:each="emp : ${employees}" th:value="${emp.name}" th:text="${emp.name}">
+                                Employee</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Step Number</th>
+                                <th>Process Name</th>
+                                <th>Responsible Person</th>
+                                <th>Target Type</th>
+                                <th>Days</th>
+                            </tr>
+                        </thead>
+                        <tbody id="processBody">
+                            <tr th:if="${config.processDetails == null or #lists.isEmpty(config.processDetails)}">
+                                <td>1</td>
+                                <td>
+                                    <input type="text" name="stepProcess" placeholder="Process name">
+                                </td>
+                                <td>
+                                    <select name="responsiblePerson">
+                                        <option value="">Select</option>
+                                        <option th:each="emp : ${employees}" th:value="${emp.name}"
+                                            th:text="${emp.name}">Employee</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="targetType" onchange="handleTargetType(this)">
+                                        <option value="">Select</option>
+                                        <option value="Automatic">Automatic</option>
+                                        <option value="Manual">Manual</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="days" class="days-field" placeholder="Days" readonly>
+                                </td>
+                            </tr>
+                            <tr th:each="step, iter : ${config.processDetails}">
+                                <td th:text="${iter.index + 1}">1</td>
+                                <td>
+                                    <input type="text" name="stepProcess" th:value="${step.stepProcess}"
+                                        placeholder="Process name">
+                                </td>
+                                <td>
+                                    <select name="responsiblePerson">
+                                        <option value="">Select</option>
+                                        <option th:each="emp : ${employees}" th:value="${emp.name}"
+                                            th:text="${emp.name}" th:selected="${emp.name == step.responsiblePerson}">
+                                            Employee
+                                        </option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="targetType" onchange="handleTargetType(this)">
+                                        <option value="">Select</option>
+                                        <option value="Automatic" th:selected="${step.targetType == 'Automatic'}">
+                                            Automatic</option>
+                                        <option value="Manual" th:selected="${step.targetType == 'Manual'}">Manual
+                                        </option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="days" class="days-field" th:value="${step.days}"
+                                        placeholder="Days" readonly>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="actions">
+                        <button class="submit-btn" type="submit">
+                            <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M4 12a1 1 0 0 1 1-1h9.6l-3.3-3.3a1 1 0 0 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 1 1-1.4-1.4l3.3-3.3H5a1 1 0 0 1-1-1Z" />
+                            </svg>
+                            Submit
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <script>
+                function addRow() {
+                    const tbody = document.getElementById("processBody");
+                    const rowCount = tbody.rows.length + 1;
+                    const row = tbody.insertRow(tbody.rows.length);
+
+                    row.insertCell(0).innerText = rowCount;
+                    row.insertCell(1).innerHTML = '<input type="text" name="stepProcess" placeholder="Process name">';
+                    const template = document.getElementById("employeeSelectTemplate");
+                    row.insertCell(2).innerHTML = template ? template.innerHTML : '<option value="">Select</option>';
+                    row.cells[2].innerHTML = `<select name="responsiblePerson">${row.cells[2].innerHTML}</select>`;
+                    row.insertCell(3).innerHTML = `
+            <select name="targetType" onchange="handleTargetType(this)">
+                <option value="">Select</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+            </select>
+        `;
+                    row.insertCell(4).innerHTML = '<input type="number" name="days" class="days-field" placeholder="Days" readonly>';
+                }
+
+                function saveSteps() {
+                    const inputs = document.querySelectorAll("#processBody input");
+                    const hasValue = Array.from(inputs).some(input => input.value.trim() !== "");
+
+                    if (!hasValue) {
+                        alert("Please add at least one process step.");
+                        return;
+                    }
+
+                    alert("Process steps saved.");
+                }
+
+                function handleTargetType(select) {
+                    const row = select.closest("tr");
+                    const days = row.querySelector(".days-field");
+
+                    if (select.value === "Automatic") {
+                        days.readOnly = false;
+                    }
+                    else {
+                        days.readOnly = true;
+                        days.value = "";
+                    }
+                }
+
+                function confirmSubmitProcess() {
+                    return confirm("Are you sure?");
+                }
+            </script>
+
+        </main>
+    </div>
+</body>
+
+</html>

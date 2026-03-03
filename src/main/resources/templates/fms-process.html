@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>FMS Process</title>
+
+    <style>
+        :root {
+            --ink: #0f1b2d;
+            --slate: #5a6b7c;
+            --navy: #1f3c88;
+            --navy-deep: #152d6c;
+            --teal: #0aa6a6;
+            --mint: #e7f7f7;
+            --bg: #f2f6fb;
+            --panel: #ffffff;
+            --shadow: 0 16px 34px rgba(10, 23, 47, 0.12);
+            --shadow-hover: 0 20px 40px rgba(10, 23, 47, 0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: "Poppins", "Segoe UI", Tahoma, sans-serif;
+            background:
+                radial-gradient(circle at 10% 12%, rgba(10, 166, 166, 0.12), transparent 45%),
+                radial-gradient(circle at 90% 6%, rgba(31, 60, 136, 0.16), transparent 45%),
+                var(--bg);
+            margin: 0;
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 24px;
+            margin-left: 0;
+        }
+
+        .header {
+            background: linear-gradient(120deg, var(--navy), #2847a7 55%, #1b66b0);
+            color: white;
+            padding: 30px 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .header::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            top: -90px;
+            width: 220px;
+            height: 220px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--slate);
+            margin: 0 0 24px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumbs a {
+            color: var(--navy-deep);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--teal);
+        }
+
+        .breadcrumbs span {
+            color: #9aa7b6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--panel);
+        }
+
+        .table-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        th {
+            padding: 18px 16px;
+            border-bottom: 1px solid #e1e5e9;
+            text-align: left;
+            background: linear-gradient(135deg, var(--navy), var(--navy-deep));
+            color: white;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 18px 16px;
+            border-bottom: 1px solid #e1e5e9;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        tbody tr:hover {
+            background: #e3f2fd;
+            transition: var(--transition);
+        }
+
+        input {
+            padding: 12px 16px;
+            width: 100%;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 14px;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--navy);
+            box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+        }
+
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .next-btn,
+        .save-btn,
+        .add-btn,
+        .edit-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .next-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .next-btn:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .save-btn:focus {
+            outline: 2px solid #22c55e;
+            outline-offset: 2px;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            justify-content: center;
+            font-size: 20px;
+            padding: 0;
+        }
+
+        .add-btn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: scale(1.05);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .add-btn:focus {
+            outline: 2px solid #22c55e;
+            outline-offset: 2px;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .edit-btn:focus {
+            outline: 2px solid #f59e0b;
+            outline-offset: 2px;
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .summary-card {
+            background: var(--panel);
+            border: 1px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .summary-title {
+            margin: 0 0 16px;
+            font-size: 18px;
+            color: var(--navy);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .icon-lg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .app-content {
+                padding: 16px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 20px 16px;
+            }
+
+            .header h2 {
+                font-size: 20px;
+            }
+
+            .header h3 {
+                font-size: 16px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .next-btn,
+            .save-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            th,
+            td {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+
+            .breadcrumbs {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                text-align: left;
+            }
+
+            .top-actions {
+                justify-content: center;
+            }
+
+            .add-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+        }
+
+        /* Accessibility */
+        .next-btn,
+        .save-btn,
+        .add-btn,
+        .edit-btn {
+            position: relative;
+        }
+
+        /* Focus visible for better keyboard navigation */
+        .next-btn:focus-visible,
+        .save-btn:focus-visible,
+        .add-btn:focus-visible,
+        .edit-btn:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/admin-navbar :: navbar}"></th:block>
+
+    <div class="app-shell">
+        <main class="app-content">
+
+            <div class="header">
+                <h2 th:text="${companyName != null ? companyName + ' – Flow Management System' : 'Flow Management System'}">HQEPL – Flow Management System</h2>
+                <h3>ADMIN DASHBOARD</h3>
+            </div>
+
+            <div class="container">
+                <div class="breadcrumbs">
+                    <a href="/admin/dashboard">Home</a>
+                    <span>›</span>
+                    <a href="/admin/fms-list">Flows</a>
+                    <span>›</span>
+                    <span th:text="${folderName}">Flow</span>
+                </div>
+
+                <div th:if="${!hasData or editMode}">
+                    <form method="post" action="/admin/fms-process-steps">
+                        <input type="hidden" name="folderId" th:value="${folderId}">
+                        <input type="hidden" name="edit" th:value="${editMode}">
+                        <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                        <div class="top-actions">
+                            <button class="add-btn" type="button" onclick="addOrderRow()"
+                                aria-label="Add a new order row">
+                                <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:10%">S.No</th>
+                                        <th>Order Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orderBody">
+                                    <tr th:if="${config.orderDetails == null or #lists.isEmpty(config.orderDetails)}">
+                                        <td>1</td>
+                                        <td>
+                                            <input type="text" name="orderDetails" placeholder="Enter order details">
+                                        </td>
+                                    </tr>
+                                    <tr th:each="detail, iter : ${config.orderDetails}">
+                                        <td th:text="${iter.index + 1}">1</td>
+                                        <td>
+                                            <input type="text" name="orderDetails" th:value="${detail}"
+                                                placeholder="Enter order details">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="actions">
+                            <button class="next-btn" type="submit">
+                                <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M13 5a1 1 0 0 1 1.7-.7l5 5a1 1 0 0 1 0 1.4l-5 5A1 1 0 0 1 13 15V9a1 1 0 0 1 1-1h-7a1 1 0 1 1 0-2h7a1 1 0 0 1-1-1Z" />
+                                </svg>
+                                Next Page
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div th:if="${hasData and !editMode}">
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h4 class="summary-title">Order Details</h4>
+                            <div class="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style="width:10%">SR</th>
+                                            <th>Order Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="detail, iter : ${config.orderDetails}">
+                                            <td th:text="${iter.index + 1}">1</td>
+                                            <td th:text="${detail}">Order Number</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top:14px; display:flex; justify-content:flex-start;">
+                                <a th:href="@{/admin/fms-process(folderId=${folderId}, edit=true)}" class="edit-btn"
+                                    aria-label="Edit order details">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path
+                                            d="M4 16.5V20h3.5L18.8 8.7l-3.5-3.5L4 16.5Zm16.7-10.2a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0l-1.4 1.4 3.5 3.5 1.4-1.9Z" />
+                                    </svg>
+                                    Edit
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <h4 class="summary-title">Process Details</h4>
+                            <div class="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Step / Process</th>
+                                            <th>Responsible Person</th>
+                                            <th>Target Type</th>
+                                            <th>Days</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="step, iter : ${config.processDetails}">
+                                            <td th:text="${iter.index + 1}">1</td>
+                                            <td th:text="${step.stepProcess}">Order Confirmation</td>
+                                            <td th:text="${step.responsiblePerson}">Sales</td>
+                                            <td th:text="${step.targetType}">Manual</td>
+                                            <td th:text="${step.days}">5</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script>
+                function addOrderRow() {
+                    const tbody = document.getElementById("orderBody");
+                    const rowCount = tbody.rows.length + 1;
+                    const row = tbody.insertRow(tbody.rows.length);
+
+                    row.insertCell(0).innerText = rowCount;
+                    row.insertCell(1).innerHTML = '<input type="text" name="orderDetails" placeholder="Enter order details">';
+                }
+
+
+            </script>
+
+        </main>
+    </div>
+</body>
+
+</html>

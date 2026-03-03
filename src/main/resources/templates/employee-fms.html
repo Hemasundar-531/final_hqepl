@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title>FMS - Employee Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR STYLES FROM FMS FOLDER */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #1e293b;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            flex: 1;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: #334155;
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        .user-profile {
+            padding: 20px;
+            border-top: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0f172a;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            border: 2px solid #1e293b;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 32px;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: #1e293b;
+            padding: 20px 24px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .breadcrumb a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: #fff;
+        }
+
+        .breadcrumb span {
+            color: #64748b;
+        }
+
+        /* FOLDER GRID */
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .folder-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .folder-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .folder-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.15);
+            border-color: #6366f1;
+        }
+
+        .folder-card:hover::before {
+            opacity: 1;
+        }
+
+        .folder-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6366f1;
+            transition: all 0.3s ease;
+        }
+
+        .folder-card:hover .folder-icon {
+            background: #e0e7ff;
+            transform: scale(1.05);
+        }
+
+        .folder-info h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .folder-info p {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        .status-pill.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-pill.inactive {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/employee-sidebar :: sidebar}"></th:block>
+
+    <main class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="breadcrumb">
+                <a href="/employee/dashboard">Home</a>
+                <span>/</span>
+                <span style="color: #fff;">FMS Folders</span>
+            </div>
+            <div class="user-profile-mini" style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar-mini"
+                    style="width: 32px; height: 32px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;">
+                    <span th:text="${#strings.substring(employeeName,0,1)}">E</span>
+                </div>
+                <span th:text="${employeeName}">Employee</span>
+            </div>
+        </div>
+
+        <div class="page-header" style="margin-bottom: 32px;">
+            <h1 style="font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">FMS Workspaces</h1>
+            <p style="color: #64748b; margin: 0;">Access your assigned process folders and workflows.</p>
+        </div>
+
+        <div class="folder-grid">
+            <!-- Dynamic Folders would be ideal, but keeping static for now as per existing code -->
+
+            <!-- Folder 1 -->
+            <a th:href="@{/employee/fms/folder1}" class="folder-card" style="border-left: 4px solid #6366f1;">
+                <div class="folder-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="folder-info">
+                    <h3>Folder 1</h3>
+                    <p>Primary Workflow Process</p>
+                </div>
+                <div style="margin-top: auto;">
+                    <span class="status-pill" th:classappend="${permissions.fms.folder1} ? 'active' : 'inactive'">
+                        <span th:if="${permissions.fms.folder1}">
+                            <span
+                                style="display: inline-block; width: 6px; height: 6px; background: #15803d; border-radius: 50%; margin-right: 4px;"></span>
+                            Access Granted
+                        </span>
+                        <span th:unless="${permissions.fms.folder1}">
+                            <span
+                                style="display: inline-block; width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; margin-right: 4px;"></span>
+                            Restricted
+                        </span>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Folder 2 -->
+            <a th:href="@{/employee/fms/folder2}" class="folder-card" style="border-left: 4px solid #8b5cf6;">
+                <div class="folder-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="folder-info">
+                    <h3>Folder 2</h3>
+                    <p>Secondary Workflow Process</p>
+                </div>
+                <div style="margin-top: auto;">
+                    <span class="status-pill" th:classappend="${permissions.fms.folder2} ? 'active' : 'inactive'">
+                        <span th:if="${permissions.fms.folder2}">
+                            <span
+                                style="display: inline-block; width: 6px; height: 6px; background: #15803d; border-radius: 50%; margin-right: 4px;"></span>
+                            Access Granted
+                        </span>
+                        <span th:unless="${permissions.fms.folder2}">
+                            <span
+                                style="display: inline-block; width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; margin-right: 4px;"></span>
+                            Restricted
+                        </span>
+                    </span>
+                </div>
+            </a>
+
+            <!-- ADDED FOR DEMO (VIP) -->
+            <a th:href="@{/employee/fms/vip}" class="folder-card" style="border-left: 4px solid #f59e0b;">
+                <div class="folder-icon" style="color: #f59e0b;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                        </polygon>
+                    </svg>
+                </div>
+                <div class="folder-info">
+                    <h3>VIP Requests</h3>
+                    <p>Priority Client Workflows</p>
+                </div>
+                <div style="margin-top: auto;">
+                    <span class="status-pill active">
+                        <span
+                            style="display: inline-block; width: 6px; height: 6px; background: #15803d; border-radius: 50%; margin-right: 4px;"></span>
+                        Access Granted
+                    </span>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <script>
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>

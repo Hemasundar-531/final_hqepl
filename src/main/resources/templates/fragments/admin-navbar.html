@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin Navbar</title>
+</head>
+
+<body>
+    <!-- Reusable admin header: Admin (optional) + Logout in top-right. Use th:replace="~{fragments/admin-navbar :: navbar}" at start of body. -->
+    <th:block th:fragment="navbar">
+        <style type="text/css">
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+            .admin-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 70px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 40px;
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                color: #fff;
+                z-index: 1000;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            .admin-navbar-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .company-logo {
+                height: 32px;
+                width: auto;
+                max-width: 120px;
+                object-fit: contain;
+                border-radius: 4px;
+            }
+
+            .admin-navbar-label {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                line-height: 1.2;
+            }
+
+            .company-name {
+                font-size: 18px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                color: #fff;
+                white-space: nowrap;
+            }
+
+            .admin-badge {
+                font-size: 10px;
+                font-weight: 600;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .admin-badge::before {
+                content: '';
+                display: block;
+                width: 6px;
+                height: 6px;
+                background-color: #22c55e;
+                border-radius: 50%;
+                box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+            }
+
+            .admin-navbar-logout-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.05);
+                color: #cbd5e1;
+                font-weight: 500;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .admin-navbar-logout-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+
+            .admin-navbar-logout-btn svg {
+                width: 16px;
+                height: 16px;
+                opacity: 0.7;
+            }
+
+            body.admin-navbar-active {
+                padding-top: 70px;
+            }
+        </style>
+        <header class="admin-navbar" id="admin-navbar" role="banner">
+            <div class="admin-navbar-left">
+                <!-- Display logo if available -->
+                <img th:if="${companyLogo != null}" th:src="${companyLogo}" alt="Logo" class="company-logo">
+
+                <div class="admin-navbar-label">
+                    <span class="company-name" th:text="${companyName != null ? companyName : 'Flow Management'}">Flow Management</span>
+                    <span class="admin-badge">
+                        <span th:text="${userRole == 'SUPERADMIN' ? 'System Admin' : 'Admin'}">System Admin</span>
+                        <span th:if="${username != null or userEmail != null}" 
+                              style="margin-left: 8px; color: rgba(255,255,255,0.6); text-transform: none; font-weight: 400;"
+                              th:text="${userEmail != null ? userEmail : username}">admin@company.com</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="admin-navbar-right" style="display:flex; align-items:center; gap:20px;">
+                <span th:if="${username != null}" th:text="${username}"
+                    style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.9);">Admin</span>
+                <form th:action="@{/logout}" method="post" class="admin-navbar-logout-form" id="admin-logout-form"
+                    style="margin:0;">
+                    <button type="submit" class="admin-navbar-logout-btn">
+                        <span>Disconnect</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </header>
+        <script th:inline="javascript">
+            (function () {
+                document.body.classList.add("admin-navbar-active");
+                var form = document.getElementById("admin-logout-form");
+                if (form) {
+                    form.addEventListener("submit", function () {
+                        try { sessionStorage.clear(); } catch (e) { }
+                        try { localStorage.removeItem("token"); localStorage.removeItem("auth"); } catch (e) { }
+                    });
+                }
+            })();
+        </script>
+    </th:block>
+</body>
+
+</html>

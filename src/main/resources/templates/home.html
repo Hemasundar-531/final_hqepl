@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<style>
+    .app-shell{
+        display:flex;
+        min-height:100vh;
+        font-family:"Poppins","Segoe UI",Tahoma,sans-serif;
+    }
+    .sidebar{
+        width:240px;
+        background:linear-gradient(180deg, #132a63, #1f3c88);
+        color:#fff;
+        padding:20px 16px;
+        position:sticky;
+        top:0;
+        height:100vh;
+    }
+    .sidebar .brand{
+        font-weight:800;
+        font-size:16px;
+        letter-spacing:0.4px;
+        margin-bottom:18px;
+    }
+    .sidebar .brand span{
+        display:block;
+        font-weight:400;
+        font-size:11px;
+        color:rgba(255,255,255,0.7);
+        margin-top:4px;
+    }
+    .nav{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+    .nav-link{
+        color:#e9efff;
+        text-decoration:none;
+        font-size:13px;
+        padding:10px 12px;
+        border-radius:10px;
+        background:rgba(255,255,255,0.08);
+    }
+    .nav-link:hover{
+        background:rgba(255,255,255,0.16);
+    }
+    .logout-form{
+        margin-top:18px;
+    }
+    .logout-btn{
+        width:100%;
+        padding:10px 12px;
+        border-radius:10px;
+        border:none;
+        background:#f97316;
+        color:#fff;
+        font-weight:700;
+        cursor:pointer;
+    }
+    .app-content{
+        flex:1;
+        padding:24px;
+    }
+</style>
+<body>
+    <div class="app-shell">
+    
+        <main class="app-content">
+            <h2>Login Successful</h2>
+            <p>Welcome to Flow Management System</p>
+        </main>
+    </div>
+</body>
+</html>

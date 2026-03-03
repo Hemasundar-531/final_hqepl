@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Enterprise Flow Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Palette: Enterprise Blue */
+            --primary: #2563EB;
+            --primary-dark: #1E40AF;
+            --primary-light: #EFF6FF;
+            --secondary: #0F172A;
+            --text: #334155;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-alt: #F8FAFC;
+            --accent: #0F766E;
+            --border: #E2E8F0;
+            --white: #FFFFFF;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Manrope', sans-serif;
+            color: var(--secondary);
+            line-height: 1.2;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.2s;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            background: var(--primary-light);
+        }
+
+        /* --- HEADER --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'Manrope', sans-serif;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        /* --- HERO --- */
+        .hero {
+            padding: 160px 0 100px;
+            background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Abstract BG Shapes */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+
+        .hero-image {
+            margin-top: 40px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: var(--white);
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        /* --- LOGO STRIP --- */
+        .trusted-by {
+            padding: 40px 0;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trusted-text {
+            text-align: center;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .logo-grid {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            opacity: 0.6;
+        }
+
+        .company-logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- FEATURES --- */
+        .features {
+            padding: 100px 0;
+            background: var(--bg-alt);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* --- TESTIMONIALS --- */
+        .testimonials {
+            padding: 100px 0;
+            background: var(--white);
+            overflow: hidden;
+        }
+
+        .testimonial-carousel {
+            display: flex;
+            transition: transform 0.5s ease;
+            width: 300%;
+            /* For 3 items */
+        }
+
+        .testimonial-item {
+            width: 33.333%;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .quote {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--secondary);
+            max-width: 800px;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .quote::before {
+            content: "“";
+            font-size: 4rem;
+            color: var(--primary-light);
+            position: absolute;
+            top: -40px;
+            left: -20px;
+            z-index: -1;
+        }
+
+        .author img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            object-fit: cover;
+        }
+
+        .author h4 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .author span {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 40px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+
+        /* --- PRICING --- */
+        .pricing {
+            padding: 100px 0;
+            background: var(--bg-alt);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            align-items: stretch;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            padding: 40px 32px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: 0.3s;
+        }
+
+        .pricing-card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-8px);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid var(--primary);
+            position: relative;
+        }
+
+        .pricing-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .price span {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .plan-desc {
+            color: var(--text-light);
+            margin-bottom: 32px;
+            min-height: 48px;
+        }
+
+        .features-list {
+            margin-bottom: 32px;
+            flex: 1;
+        }
+
+        .features-list li {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .check {
+            color: var(--accent);
+            width: 20px;
+            height: 20px;
+        }
+
+        .pricing-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 80px 0 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 64px;
+            margin-bottom: 60px;
+        }
+
+        .footer-brand p {
+            color: #94A3B8;
+            margin-top: 16px;
+            max-width: 300px;
+        }
+
+        .footer-col h5 {
+            color: var(--white);
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-col a {
+            color: #94A3B8;
+        }
+
+        .footer-col a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            color: #64748B;
+            font-size: 0.9rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pricing-grid {
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            .nav-links,
+            .nav-cta {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero {
+                padding: 120px 0 60px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 16px;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#2563EB" />
+                    <path d="M7 12L10.5 15.5L17 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                Nexus<span>Flow</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#">Product</a>
+                <a href="#">Solutions</a>
+                <a href="#">Pricing</a>
+                <a href="#">Resources</a>
+                <a href="#">Company</a>
+            </nav>
+            <div class="nav-cta">
+                <a href="/login" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">Log In</a>
+                <a href="#" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">Get Started</a>
+            </div>
+            <button class="mobile-menu-btn">☰</button>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container hero-content">
+            <span class="badge">New: AI-Powered Analytics 🚀</span>
+            <h1>Orchestrate Your Workflow with Precision</h1>
+            <p>Streamline operations, automate repetitive tasks, and gain real-time insights with the enterprise-grade
+                flow management system designed for modern teams.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary">Start Free Trial</a>
+                <a href="#" class="btn btn-secondary">Book a Demo</a>
+            </div>
+
+            <!-- Hero Image Placeholder -->
+            <div class="hero-image">
+                <div style="background: #e2e8f0; height: 2px; width: 100%;"></div>
+                <!-- Mockup UI Element -->
+                <div style="padding: 24px;">
+                    <div style="display: flex; gap: 24px; margin-bottom: 24px;">
+                        <div style="width: 200px; height: 400px; background: #F1F5F9; border-radius: 8px;"></div>
+                        <div
+                            style="flex: 1; background: #F8FAFC; border-radius: 8px; height: 400px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                            Dashboard Preview Image
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By -->
+    <div class="trusted-by">
+        <div class="container">
+            <p class="trusted-text">Trusted by innovative teams worldwide</p>
+            <div class="logo-grid">
+                <div class="company-logo">ACME Corp</div>
+                <div class="company-logo">Globex</div>
+                <div class="company-logo">Soylent</div>
+                <div class="company-logo">Initech</div>
+                <div class="company-logo">Umbrella</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Everything you need to scale</h2>
+                <p>Powerful features built to handle complex enterprise workflows without the clutter.</p>
+            </div>
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Real-time Analytics</h3>
+                    <p>Monitor your team's performance with live dashboards and customizable reports.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3>Kanban Workflows</h3>
+                    <p>Visualize your production pipeline with intuitive drag-and-drop boards.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3>Role Management</h3>
+                    <p>Granular access control for Admins, Managers, and Employees.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Order Stacking</h3>
+                    <p>Batch process orders efficiently with our smart stacking technology.</p>
+                </div>
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Automated QC</h3>
+                    <p>Set up automated quality checkpoints to ensure zero-defect delivery.</p>
+                </div>
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3>API Integration</h3>
+                    <p>Connect seamlessly with your ERP and CRM systems via our robust API.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="container section-header">
+            <h2>Loved by Industry Leaders</h2>
+        </div>
+        <div class="container" style="overflow: hidden;">
+            <div class="testimonial-carousel" id="carousel">
+                <div class="testimonial-item">
+                    <div class="quote">
+                        "NexusFlow revolutionized how we handle our production line. We've seen a 40% increase in
+                        efficiency within the first month."
+                    </div>
+                    <div class="author">
+                        <img src="https://ui-avatars.com/api/?name=Sarah+J&background=random" alt="Sarah J">
+                        <h4>Sarah Jenkins</h4>
+                        <span>COO at TechFlow</span>
+                    </div>
+                </div>
+                <div class="testimonial-item">
+                    <div class="quote">
+                        "The ability to customize flows for different departments while keeping everything on one
+                        dashboard is a game changer."
+                    </div>
+                    <div class="author">
+                        <img src="https://ui-avatars.com/api/?name=Mike+R&background=random" alt="Mike R">
+                        <h4>Mike Ross</h4>
+                        <span>Product Manager at BuildCorp</span>
+                    </div>
+                </div>
+                <div class="testimonial-item">
+                    <div class="quote">
+                        "Implementation was smooth, and the support team is incredible. Highly recommend for any growing
+                        manufacturer."
+                    </div>
+                    <div class="author">
+                        <img src="https://ui-avatars.com/api/?name=David+K&background=random" alt="David K">
+                        <h4>David Kim</h4>
+                        <span>Director of Ops at SwiftMake</span>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-dots">
+                <div class="dot active" onclick="moveCarousel(0)"></div>
+                <div class="dot" onclick="moveCarousel(1)"></div>
+                <div class="dot" onclick="moveCarousel(2)"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simple, transparent pricing</h2>
+                <p>Choose the plan that fits your business needs.</p>
+            </div>
+            <div class="pricing-grid">
+                <!-- Starter -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">Starter</h3>
+                    <div class="price">$49<span>/mo</span></div>
+                    <p class="plan-desc">Perfect for small teams getting started with flow management.</p>
+                    <ul class="features-list">
+                        <li><span class="check">✓</span> Up to 5 Users</li>
+                        <li><span class="check">✓</span> Basic Flow Diagrams</li>
+                        <li><span class="check">✓</span> 7-day History</li>
+                        <li><span class="check">✓</span> Email Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary pricing-btn">Get Started</a>
+                </div>
+                <!-- Pro -->
+                <div class="pricing-card popular">
+                    <div class="pricing-tag">MOST POPULAR</div>
+                    <h3 class="plan-name">Pro</h3>
+                    <div class="price">$149<span>/mo</span></div>
+                    <p class="plan-desc">Advanced tools for growing businesses needing optimization.</p>
+                    <ul class="features-list">
+                        <li><span class="check">✓</span> Up to 20 Users</li>
+                        <li><span class="check">✓</span> Advanced Logic Flows</li>
+                        <li><span class="check">✓</span> 30-day History</li>
+                        <li><span class="check">✓</span> Priority Support</li>
+                        <li><span class="check">✓</span> API Access</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary pricing-btn">Start Free Trial</a>
+                </div>
+                <!-- Enterprise -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">Enterprise</h3>
+                    <div class="price">$499<span>/mo</span></div>
+                    <p class="plan-desc">For large organizations requiring custom solutions and security.</p>
+                    <ul class="features-list">
+                        <li><span class="check">✓</span> Unlimited Users</li>
+                        <li><span class="check">✓</span> SSO & Custom roles</li>
+                        <li><span class="check">✓</span> Unlimited History</li>
+                        <li><span class="check">✓</span> Dedicated Account Manager</li>
+                        <li><span class="check">✓</span> On-premise Deployment</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary pricing-btn">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="24" height="24" rx="6" fill="#FFFFFF" />
+                            <path d="M7 12L10.5 15.5L17 8.5" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        <span style="color: white; margin-left: 8px;">NexusFlow</span>
+                    </div>
+                    <p>Empowering teams to build, manage, and optimize their workflows with intelligent tools.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <ul>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Integrations</a></li>
+                        <li><a href="#">Enterprise</a></li>
+                        <li><a href="#">Changelog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Company</h5>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Resources</h5>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Community</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div>&copy; 2026 NexusFlow Inc. All rights reserved.</div>
+                <div style="display: flex; gap: 24px;">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple Carousel Logic
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.testimonial-item');
+        const carousel = document.getElementById('carousel');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+
+        function moveCarousel(index) {
+            currentSlide = index;
+            const offset = -100 * (currentSlide / 3); // Since width is 300%
+            // Actually, width is 300%, so translateX should be -0%, -33.33%, -66.66%
+            // Let's fix the logic: width of container serves as 100%. 
+            // In CSS I set width: 300%. So specific offsets:
+            // 0: 0%
+            // 1: -33.333%
+            // 2: -66.666%
+
+            const percent = -(index * (100 / 3));
+            carousel.style.transform = `translateX(${percent}%)`;
+
+            // Update dots
+            dots.forEach(d => d.classList.remove('active'));
+            dots[index].classList.add('active');
+        }
+
+        // Auto play (optional)
+        setInterval(() => {
+            let next = currentSlide + 1;
+            if (next >= totalSlides) next = 0;
+            moveCarousel(next);
+        }, 5000);
+
+        // Mobile Menu Toggle (Basic)
+        document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
+            const nav = document.querySelector('.nav-links');
+            const cta = document.querySelector('.nav-cta');
+
+            // For a real prod site, would toggle a class. 
+            // Here just log or simple alert as it's a draft.
+            // Let's make it actually do something simple for the draft.
+            if (nav.style.display === 'flex') {
+                nav.style.display = 'none';
+                cta.style.display = 'none';
+            } else {
+                nav.style.display = 'flex';
+                nav.style.flexDirection = 'column';
+                nav.style.position = 'absolute';
+                nav.style.top = '72px';
+                nav.style.left = '0';
+                nav.style.width = '100%';
+                nav.style.background = 'white';
+                nav.style.padding = '24px';
+                nav.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+
+                cta.style.display = 'flex';
+                cta.style.flexDirection = 'column';
+                cta.style.position = 'absolute';
+                cta.style.top = '250px'; // approximate
+                cta.style.width = '100%';
+                cta.style.padding = '0 24px 24px';
+                cta.style.background = 'white';
+            }
+        });
+    </script>
+</body>
+
+</html>

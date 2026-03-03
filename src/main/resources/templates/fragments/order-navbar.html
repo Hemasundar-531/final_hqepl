@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Order Entry Navbar</title></head>
+<body>
+    <!-- Reusable Order Entry header: label + Logout in top-right. Same UI/behavior as Admin navbar. Use th:replace="~{fragments/order-navbar :: navbar}" at start of body. -->
+    <th:block th:fragment="navbar">
+        <style type="text/css">
+            .order-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 52px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 20px 0 24px;
+                background: linear-gradient(90deg, #1f3c88, #2a4a9e);
+                color: #fff;
+                box-shadow: 0 2px 12px rgba(15, 23, 47, 0.15);
+                z-index: 1000;
+                font-family: "Poppins", "Segoe UI", Tahoma, sans-serif;
+            }
+            .order-navbar-label {
+                font-size: 14px;
+                font-weight: 600;
+                letter-spacing: 0.3px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .order-navbar-label::before {
+                content: "";
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #22c55e;
+                box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4);
+            }
+            .order-navbar-logout-form {
+                margin: 0;
+            }
+            .order-navbar-logout-btn {
+                padding: 8px 18px;
+                border: none;
+                border-radius: 8px;
+                background: #f97316;
+                color: #fff;
+                font-weight: 600;
+                font-size: 13px;
+                cursor: pointer;
+                transition: background 0.2s, transform 0.1s;
+            }
+            .order-navbar-logout-btn:hover {
+                background: #ea580c;
+            }
+            .order-navbar-logout-btn:active {
+                transform: scale(0.98);
+            }
+            body.order-navbar-active {
+                padding-top: 52px;
+            }
+        </style>
+        <header class="order-navbar" id="order-navbar" role="banner">
+            <span class="order-navbar-label">Order Entry</span>
+            <form th:action="@{/logout}" method="post" class="order-navbar-logout-form" id="order-logout-form">
+                <button type="submit" class="order-navbar-logout-btn">Logout</button>
+            </form>
+        </header>
+        <script th:inline="javascript">
+            (function(){
+                document.body.classList.add("order-navbar-active");
+                var form = document.getElementById("order-logout-form");
+                if (form) {
+                    form.addEventListener("submit", function() {
+                        try { sessionStorage.clear(); } catch (e) {}
+                        try { localStorage.clear(); } catch (e) {}
+                    });
+                }
+            })();
+        </script>
+    </th:block>
+</body>
+</html>

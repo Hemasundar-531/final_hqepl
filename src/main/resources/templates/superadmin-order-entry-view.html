@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Order Entry - Super Admin</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F0F4FA;
+            --card: #FFFFFF;
+            --text: #1E293B;
+            --muted: #64748B;
+            --line: #E2E8F0;
+            --primary: #1A56DB;
+            --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .shell {
+            max-width: 1240px;
+            margin: 28px auto;
+            padding: 0 20px 24px;
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .back {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .meta {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+            display: grid;
+            gap: 6px;
+        }
+
+        .meta h1 {
+            margin: 0;
+            font-family: "Sora", sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .meta p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .table-wrap {
+            max-height: 480px;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--line);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line);
+            font-size: 0.88rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--muted);
+            background: #F8FAFC;
+        }
+
+        tbody tr:hover td {
+            background: #FFFBEB;
+        }
+
+        .empty {
+            padding: 24px;
+            color: var(--muted);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <div class="top">
+            <a class="back" th:href="'/superadmin/company-detail/' + ${adminId} + '/folder/' + ${folderId}">← Back to
+                FMS</a>
+        </div>
+
+        <div class="card">
+            <div class="meta">
+                <h1>Order Entry View (Super Admin)</h1>
+                <p>
+                    Employee:
+                    <strong th:text="${selectedEmployee.name}">employee</strong>
+                    |
+                    FMS:
+                    <strong th:text="${folder != null ? folder.name : folderId}">Flow</strong>
+                </p>
+                <p>Showing order-entry data for selected flow only.</p>
+            </div>
+
+            <div th:if="${orderEntryRows != null and !orderEntryRows.isEmpty()}" class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SR</th>
+                            <th>Order ID</th>
+                            <th th:each="d : ${orderDetails}" th:text="${d}">Detail</th>
+                            <th>Planning Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="row : ${orderEntryRows}">
+                            <td th:text="${row['sr']}">1</td>
+                            <td th:text="${row['orderId']}">OID</td>
+                            <td th:each="v : ${row['values']}" th:text="${v}">-</td>
+                            <td th:text="${row['planningStatus']}">Pending</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${orderEntryRows == null or #lists.isEmpty(orderEntryRows)}" class="empty">
+                No order entries found for this FMS flow.
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Edit Planning - [[${planOrderId}]]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1f5fbf;
+            --primary-deep: #174a92;
+            --accent: #0aa6a6;
+            --bg: #f5f7fb;
+            --panel: #ffffff;
+            --ink: #0f1b2d;
+            --muted: #5c6b7a;
+            --line: #e5ebf3;
+            --shadow: 0 10px 30px rgba(12, 31, 63, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--panel);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--line);
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-deep);
+            margin-bottom: 4px;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .order-badge {
+            display: inline-block;
+            background: #e9f5ff;
+            color: var(--primary);
+            padding: 3px 14px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        /* ---- Section bar ---- */
+        .section-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 18px;
+        }
+
+        .section-bar::before,
+        .section-bar::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--line);
+        }
+
+        /* ---- Fields grid ---- */
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+        }
+
+        .pm-input {
+            width: 100%;
+            padding: 10px 13px;
+            border: 2px solid var(--line);
+            border-radius: 9px;
+            font-family: "Poppins", sans-serif;
+            font-size: 13px;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+
+        .pm-input:focus {
+            border-color: var(--accent);
+        }
+
+        /* ---- Process Steps Table ---- */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            margin-bottom: 28px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: linear-gradient(90deg, #1e2a3a 0%, #0d4f6e 100%);
+            color: #fff;
+            font-weight: 700;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #eef6f6;
+        }
+
+        tbody tr:hover {
+            background: #d6efef;
+            transition: background 0.15s;
+        }
+
+        tbody td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #d4e6e6;
+            vertical-align: middle;
+            color: #1e3a4a;
+        }
+
+        /* ---- Buttons ---- */
+        .btn-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-save {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #1f5fbf, #0aa6a6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: "Poppins", sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(31, 95, 191, 0.3);
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cancel {
+            padding: 12px 20px;
+            background: var(--line);
+            color: var(--muted);
+            border: none;
+            border-radius: 10px;
+            font-family: "Poppins", sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .info-note {
+            font-size: 12px;
+            color: var(--muted);
+            background: #f0f9ff;
+            border-left: 3px solid var(--accent);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-title">✏️ Edit Production Planning</div>
+        <div class="page-sub">Update planning details for this order and submit to refresh the Time Stamp.</div>
+
+        <div class="order-badge" th:text="${planOrderId}">O2D-0000</div>
+
+        <form method="post" th:action="@{/employee/order-entry/planning}">
+            <!-- Hidden fields -->
+            <input type="hidden" name="folderId" th:value="${folderId}">
+            <input type="hidden" name="orderId" th:value="${planOrderId}">
+
+            <!-- ── Order Details ──────────────────────────────── -->
+            <div class="section-bar">Order Details</div>
+            <div class="fields-grid">
+                <!-- Order ID (read-only) -->
+                <div>
+                    <div class="field-label">Order ID</div>
+                    <input type="text" class="pm-input" th:value="${planOrderId}" readonly
+                        style="background:#f0f2f5;color:#5c6b7a;">
+                </div>
+
+                <!-- Planning Start Date -->
+                <div>
+                    <div class="field-label">Planning Start Date</div>
+                    <input id="ppStartDate" name="startDate" type="date" class="pm-input" th:value="${currentStartDate}"
+                        onchange="updateTargetDates()" required>
+                </div>
+
+                <!-- Customer Name (conditional) -->
+                <div
+                    th:if="${orderDetails != null and #strings.containsIgnoreCase(orderDetails.toString(), 'customer')}">
+                    <div class="field-label">Customer Name</div>
+                    <input type="text" class="pm-input" placeholder="Customer name"
+                        th:value="${selectedEntryFields != null ? selectedEntryFields['customer_name'] : ''}" readonly
+                        style="background:#f0f2f5;color:#5c6b7a;">
+                </div>
+
+                <!-- Company Name (conditional) -->
+                <div
+                    th:if="${orderDetails != null and #strings.containsIgnoreCase(orderDetails.toString(), 'company')}">
+                    <div class="field-label">Company Name</div>
+                    <input type="text" class="pm-input" placeholder="Company name"
+                        th:value="${selectedEntryFields != null ? selectedEntryFields['company_name'] : ''}" readonly
+                        style="background:#f0f2f5;color:#5c6b7a;">
+                </div>
+            </div>
+
+            <!-- ── Process Steps ───────────────────────────────── -->
+            <div class="section-bar">Process Steps</div>
+
+            <div class="info-note">
+                ℹ️ Submitting will save changes and update the <strong>Time Stamp</strong> to right now.
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Step / Process</th>
+                            <th>Responsible Person</th>
+                            <th>Target Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="folder-row" th:each="step, iter : ${processDetails}"
+                            th:attr="data-days=${step.days},data-target-type=${step.targetType}">
+                            <td th:text="${step.stepProcess}">Step</td>
+                            <td>
+                                <select class="pm-input" name="responsiblePerson" style="width:100%;">
+                                    <option th:each="opt : ${responsibleOptions}" th:value="${opt}" th:text="${opt}"
+                                        th:selected="${opt} == ${step.responsiblePerson}">
+                                        Employee
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <input class="target-date-input pm-input" type="date" name="targetDate"
+                                    style="width:100%;">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ── Buttons ────────────────────────────────────── -->
+            <div class="btn-row">
+                <a th:href="@{/employee/planning-result(folderId=${folderId},planOrderId=${planOrderId})}"
+                    class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">💾 Save &amp; Update Time Stamp</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function updateTargetDates() {
+            const startInput = document.getElementById("ppStartDate");
+            if (!startInput) return;
+            let startValue = startInput.value;
+            if (!startValue) return;
+
+            if (startValue.includes("-")) {
+                const parts = startValue.split("-");
+                if (parts[0].length === 2) {
+                    startValue = parts[2] + "-" + parts[1] + "-" + parts[0];
+                }
+            }
+
+            document.querySelectorAll("tr.folder-row").forEach(row => {
+                const targetInput = row.querySelector(".target-date-input");
+                if (!targetInput) return;
+                const targetType = (row.getAttribute("data-target-type") || "").toLowerCase();
+                const days = parseInt(row.getAttribute("data-days") || "0", 10);
+
+                if (targetType === "manual") {
+                    targetInput.readOnly = false;
+                    targetInput.required = true;
+                    targetInput.style.backgroundColor = "";
+                    targetInput.style.pointerEvents = "";
+                    targetInput.title = "This date is required — please select a date.";
+                    return;
+                }
+
+                targetInput.required = false;
+                targetInput.readOnly = true;
+                targetInput.style.backgroundColor = "#f0f2f5";
+                targetInput.style.pointerEvents = "none";
+
+                if (Number.isNaN(days)) { targetInput.value = ""; return; }
+
+                try {
+                    const base = new Date(startValue + "T00:00:00");
+                    if (isNaN(base.getTime())) throw new Error();
+                    const d = new Date(base);
+                    d.setDate(d.getDate() + days);
+                    targetInput.value = d.toISOString().slice(0, 10);
+                } catch (e) {
+                    targetInput.value = "";
+                }
+            });
+        }
+
+        // Auto-compute dates on load if start date is already set
+        document.addEventListener("DOMContentLoaded", updateTargetDates);
+    </script>
+</body>
+
+</html>

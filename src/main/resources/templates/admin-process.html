@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin – Process Setup</title>
+    <style>
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #132a63, #1f3c88);
+            color: #fff;
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar .brand span {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #e9efff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .logout-form {
+            margin-top: 18px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: none;
+            background: #f97316;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 24px;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1f3c88;
+            color: white;
+            padding: 15px 25px;
+            font-size: 18px;
+        }
+
+        .container {
+            padding: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .table-scroll {
+            max-height: 480px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        th {
+            background: #f0f2f5;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 6px;
+        }
+
+        .btn {
+            margin-top: 15px;
+            background: #1f3c88;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+        function toggleDate(row) {
+            const mode = document.getElementById("mode-" + row).value;
+            const dateInput = document.getElementById("date-" + row);
+            const daysInput = document.getElementById("days-" + row);
+
+            if (mode === "AUTO") {
+                dateInput.disabled = true;
+                daysInput.value = 5; // default automatic days
+                daysInput.disabled = true;
+            } else {
+                dateInput.disabled = false;
+                daysInput.disabled = false;
+                daysInput.value = "";
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/admin-navbar :: navbar}"></th:block>
+
+    <div class="app-shell">
+
+        <main class="app-content">
+
+            <div class="header" th:text="${companyName != null ? companyName + ' – Flow Management System' : 'Flow Management System'}">
+                HQEPL – Flow Management System
+            </div>
+
+            <div class="container">
+
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Steps (Process)</th>
+                                <th>Responsibility Person</th>
+                                <th>Target Date</th>
+                                <th>Days</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><input type="text" placeholder="Enter process step"></td>
+                                <td>
+                                    <select>
+                                        <option>Employee A</option>
+                                        <option>Employee B</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="mode-1" onchange="toggleDate(1)">
+                                        <option value="AUTO">Automatic</option>
+                                        <option value="MANUAL">Manual</option>
+                                    </select>
+                                    <input type="date" id="date-1" disabled>
+                                </td>
+                                <td>
+                                    <input type="number" id="days-1" disabled>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn">Save Process</button>
+
+            </div>
+
+        </main>
+    </div>
+</body>
+
+</html>

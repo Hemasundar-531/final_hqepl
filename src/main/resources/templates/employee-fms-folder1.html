@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>FMS Folder 1 - Employee Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --primary: #10b981;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            color: var(--ink);
+            background: var(--bg);
+            min-height: 100vh;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--bg);
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+        .mobile-menu-btn svg {
+            width: 20px;
+            height: 20px;
+            color: var(--ink);
+        }
+        .page-title h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .page-title p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: var(--panel);
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .coming-soon svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+        .coming-soon h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: var(--ink);
+        }
+        @media (max-width: 1024px) {
+            .mobile-menu-btn { display: flex; }
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{fragments/employee-sidebar :: sidebar}"></th:block>
+    <main class="emp-main-content">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <div class="page-title">
+                    <h1>FMS - Folder 1</h1>
+                    <p>Folder 1 content and documents</p>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="breadcrumb">
+                <a th:href="@{/employee/fms}">FMS</a>
+                <span>›</span>
+                <span>Folder 1</span>
+            </div>
+            <div class="panel">
+                <div class="coming-soon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <h3>Folder 1 Content</h3>
+                    <p>This folder contains FMS documents and workflows.</p>
+                    <p>Implementation in progress...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

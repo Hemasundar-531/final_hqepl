@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Task Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #334155;
+            --primary-light: #64748b;
+            --accent: #f97316;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --info: #0284c7;
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --line: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --header-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --sidebar-gradient: linear-gradient(180deg, #132a63, #1f3c88);
+            --accent-gradient: linear-gradient(135deg, #f97316, #ea580c);
+            --border: #e2e8f0;
+            --bg-muted: #f8fafc;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR - Reuse from employee-manager.html */
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar-gradient);
+            color: #fff;
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar .brand span {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #e9efff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(3px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT AREA */
+        /* MAIN CONTENT AREA */
+        .emp-main-content {
+            flex: 1;
+            padding: 12px 16px;
+            overflow-y: auto;
+            background: #f1f5f9;
+            max-height: 100vh;
+            margin-left: 260px;
+            /* Default sidebar width */
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .emp-main-content.sidebar-collapsed {
+            margin-left: 0;
+        }
+
+        /* HEADER */
+        .page-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            color: white;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 12px;
+        }
+
+        .page-header h1 {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #f97316;
+            text-transform: uppercase;
+        }
+
+        .header-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            justify-self: end;
+        }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr 1.2fr;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: stretch;
+        }
+
+        /* CLIENT FILTER */
+        .client-filter {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            padding: 10px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            align-self: stretch;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #clientFilterList {
+            overflow-y: auto;
+            max-height: 210px;
+            padding-right: 4px;
+        }
+
+        #clientFilterList::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #clientFilterList::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .client-filter h3 {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .client-filter label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .client-filter label:hover {
+            background: #f8fafc;
+        }
+
+        .client-filter input[type="checkbox"] {
+            accent-color: #1e293b;
+            width: 11px;
+            height: 11px;
+            cursor: pointer;
+        }
+
+        /* STATS GRID - change to 3 columns x 2 rows so each stat card is narrower */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 8px;
+        }
+
+        /* CHART CARD */
+        .chart-card {
+            background: var(--panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line);
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            min-height: 240px;
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-card-header h2 {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #475569;
+        }
+
+        .chart-card-header .icon-box {
+            width: 32px;
+            height: 32px;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .chart-wrapper {
+            flex: 0 0 auto;
+            position: relative;
+            margin-top: 4px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-wrapper canvas {
+            width: 160px !important;
+            height: 160px !important;
+            max-width: 160px !important;
+            max-height: 160px !important;
+        }
+
+        .chart-center-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .chart-center-label .label {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: -2px;
+        }
+
+        .chart-center-label .value {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -1px;
+        }
+
+        /* STATS GRID - defined in main layout section */
+
+        .stat-card {
+            background: var(--panel);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            padding: 10px 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            min-height: 70px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: #cbd5e1;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card .stat-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: #f8fafc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+        }
+
+        .stat-card .stat-title {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+
+
+        /* Simplified Stat Accents */
+        .stat-total::before {
+            background: #3b82f6;
+        }
+
+        .stat-total .stat-icon {
+            color: #3b82f6;
+        }
+
+        .stat-ontime::before {
+            background: #10b981;
+        }
+
+        .stat-ontime .stat-icon {
+            color: #10b981;
+        }
+
+        .stat-overdue::before {
+            background: #ef4444;
+        }
+
+        .stat-overdue .stat-icon {
+            color: #ef4444;
+        }
+
+        .stat-delayed::before {
+            background: #f59e0b;
+        }
+
+        .stat-delayed .stat-icon {
+            color: #f59e0b;
+        }
+
+        .stat-progress::before {
+            background: #3b82f6;
+        }
+
+        .stat-progress .stat-icon {
+            color: #3b82f6;
+        }
+
+        .stat-ats::before {
+            background: #f97316;
+        }
+
+        .stat-ats .stat-icon {
+            color: #f97316;
+        }
+
+        /* ACTION BAR */
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            margin: 12px 0;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.primary {
+            background: #1e293b;
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* SEARCH BAR */
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 8px 12px 8px 36px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            width: 200px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* TABLE */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            max-height: 520px;
+            transition: transform 0.2s ease;
+        }
+
+        .table-container:hover {
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .table-header {
+            padding: 14px 20px;
+            border-bottom: 2px solid #f1f5f9;
+            background: #fcfdfe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+
+        .table-header h3 {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-header .badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: white;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            background: var(--bg-muted);
+        }
+
+        th:first-child {
+            text-align: center;
+            width: 50px;
+        }
+
+        td {
+            padding: 10px 12px;
+            font-size: 11px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--bg-muted);
+        }
+
+        td:first-child {
+            text-align: center;
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr.selected {
+            background: #ecfdf5;
+        }
+
+        .task-id {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .task-meta {
+            font-size: 11px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* STATUS BADGE */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.on-time {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.delayed {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        .status-badge.overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* ACTION BUTTONS IN TABLE */
+        .table-action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-action-btn.complete {
+            background: #1e293b;
+            color: white;
+        }
+
+        .table-action-btn.complete:hover {
+            background: #0f172a;
+        }
+
+        .quick-complete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: #dcfce7;
+            color: #16a34a;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .quick-complete-btn:hover {
+            background: #16a34a;
+            color: white;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.2s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            background: #10b981;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-body {
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #10b981;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            padding: 24px 40px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #059669;
+        }
+
+        .modal-btn.secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* UTILITY */
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        /* UI REFRESH OVERRIDES */
+        :root {
+            --bg: #e9eff7;
+            --panel: #ffffff;
+            --text-main: #111827;
+            --text-muted: #5b6b82;
+            --line: #dbe4ef;
+            --shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 14px 30px rgba(15, 23, 42, 0.12);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+        }
+
+        body {
+            font-family: "Manrope", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.15), transparent 35%),
+                radial-gradient(circle at 95% 0%, rgba(16, 185, 129, 0.12), transparent 35%),
+                var(--bg);
+            color: var(--text-main);
+        }
+
+        .emp-main-content {
+            padding: 18px 22px 26px;
+            background: transparent;
+        }
+
+        .page-header {
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 12px 18px;
+            margin-bottom: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 18px;
+            letter-spacing: 0.7px;
+        }
+
+        .header-date {
+            font-size: 12px;
+            font-weight: 600;
+            color: #d2ddeb;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 360px 1fr 1.2fr;
+            gap: 14px;
+            margin-bottom: 18px;
+            align-items: stretch;
+        }
+
+        .client-filter,
+        .chart-card,
+        .stat-card,
+        .table-container {
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+        }
+
+        .client-filter {
+            padding: 10px 12px;
+            align-self: stretch;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .client-filter h3 {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .client-filter label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+            padding: 4px 6px;
+        }
+
+        .chart-card {
+            min-height: 220px;
+            padding: 14px;
+        }
+
+        .chart-card-header h2 {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #475569;
+        }
+
+        .chart-card-header .icon-box {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background: #eef2ff;
+            color: #334155;
+        }
+
+        .chart-wrapper {
+            margin-top: 4px;
+            flex: 1;
+            min-height: 160px;
+            height: auto;
+        }
+
+        .chart-wrapper canvas {
+            width: 160px !important;
+            height: 160px !important;
+            max-width: 160px !important;
+            max-height: 160px !important;
+        }
+
+        .chart-center-label .label {
+            font-size: 10px;
+            letter-spacing: 1.8px;
+            color: #60708a;
+        }
+
+        .chart-center-label .value {
+            font-size: 34px;
+            color: #0f172a;
+        }
+
+        /* All definitions consolidated at the top */
+
+        .stat-card {
+            min-height: 60px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: #ffffff;
+        }
+
+        .stat-card .stat-title {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: #1e293b;
+        }
+
+        .action-bar {
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 8px 12px;
+            margin: 10px 0 16px;
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(8px);
+        }
+
+        .action-btn {
+            min-height: 38px;
+            padding: 9px 16px;
+            border-radius: 12px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            box-shadow: none;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #1e3a8a, #1e293b);
+            color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            filter: brightness(1.05);
+        }
+
+        .action-btn.secondary {
+            background: #fff;
+            border: 1px solid var(--line);
+            color: #1f2a3d;
+        }
+
+        .action-btn-small {
+            min-height: 30px;
+            padding: 6px 12px;
+            font-size: 10px;
+            border-radius: 9px;
+        }
+
+        .search-wrapper {
+            margin-left: auto;
+            min-width: 270px;
+        }
+
+        .search-input {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 12px;
+            font-size: 12px;
+            border-color: #cbd5e1;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .table-container {
+            border-radius: 16px;
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5edf6;
+            background: linear-gradient(180deg, #f8fbff, #f4f8fd);
+        }
+
+        .table-header h3 {
+            font-size: 11px;
+            letter-spacing: 1.6px;
+            color: #2c3e57;
+        }
+
+        .table-header .badge {
+            background: #e7edf5;
+            color: #3e4e64;
+            border: 1px solid #d7e0ea;
+            padding: 5px 12px;
+            font-size: 10px;
+        }
+
+        .table-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 480px;
+        }
+
+
+
+        table {
+            min-width: 960px;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fbff;
+            border-bottom: 1px solid #e5edf6;
+            font-size: 10px;
+            color: #60708a;
+            padding: 12px 14px;
+        }
+
+        td {
+            font-size: 12px;
+            color: #253449;
+            padding: 12px 14px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafcff;
+        }
+
+        tbody tr:hover {
+            background: #eff6ff;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .task-id {
+            color: #55657e;
+            font-size: 11px;
+        }
+
+        .task-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #15243a;
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .status-badge {
+            padding: 6px 11px;
+            border: 1px solid transparent;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+        }
+
+        .status-badge.on-time {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .status-badge.in-progress {
+            background: #e0ecff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.delayed {
+            background: #fff7d6;
+            border-color: #fde68a;
+            color: #a16207;
+        }
+
+        .status-badge.overdue {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+
+        .quick-complete-btn {
+            width: 34px;
+            height: 34px;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #15803d;
+        }
+
+        .quick-complete-btn:hover {
+            background: #16a34a;
+            color: #fff;
+            border-color: #16a34a;
+        }
+
+        /* Checkbox Styles */
+        .form-check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            background-color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            accent-color: #10b981;
+        }
+
+        .form-check-input:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .form-check-input:hover {
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-check-label {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .table-action-btn {
+            min-height: 32px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .table-action-btn.complete {
+            background: linear-gradient(135deg, #1e3a8a, #1e293b);
+        }
+
+        .table-action-btn.complete:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e293b);
+        }
+
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(6px);
+        }
+
+        .modal {
+            border-radius: 20px;
+            border: 1px solid #dbe4ef;
+            box-shadow: 0 24px 40px rgba(15, 23, 42, 0.25);
+        }
+
+        .modal-header {
+            padding: 16px 22px;
+        }
+
+        .modal-header h2 {
+            font-size: 14px;
+            letter-spacing: 0.8px;
+        }
+
+        .modal-body {
+            padding: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 10px;
+            letter-spacing: 1.1px;
+            color: #60708a;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px;
+            border-color: #d5deea;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .modal-actions {
+            padding: 14px 22px 18px;
+            gap: 10px;
+            background: #f8fbff;
+            border-top: 1px solid #e5edf6;
+        }
+
+        .modal-btn {
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+        }
+
+        .task-history-table {
+            border-radius: 22px;
+            border: 1px solid #d4deea;
+            background: #edf2f8;
+            overflow: hidden;
+        }
+
+        .task-history-table .table-header {
+            padding: 18px 22px;
+            background: #dce4ef;
+            border-bottom: 1px solid #c7d3e3;
+        }
+
+        .task-history-table .table-header h3 {
+            color: #304562;
+        }
+
+        .task-history-table .table-header .badge {
+            background: #d2dce9;
+            color: #425675;
+            border: 1px solid #c0cddd;
+            padding: 8px 18px;
+        }
+
+        .task-history-scroll table {
+            min-width: 1220px;
+        }
+
+        .task-history-table th {
+            background: #e6ecf4;
+            color: #4d6588;
+            border-bottom: 1px solid #d2ddea;
+            padding: 18px 20px;
+        }
+
+        .task-history-table td {
+            background: #f4f7fb;
+            padding: 18px 20px;
+            border-bottom: 1px solid #e0e8f3;
+        }
+
+        .task-history-empty-cell {
+            color: #627691 !important;
+            font-size: 24px;
+            padding: 68px 20px !important;
+            border-bottom: 0 !important;
+            background: #f4f7fb !important;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE */
+        /* Single row maintained for wider desktop sizes */
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: 240px 1fr 1fr;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .emp-main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid>.stats-grid {
+                grid-column: auto;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-rows: none;
+                height: auto;
+            }
+
+            .action-bar {
+                flex-wrap: wrap;
+            }
+
+            .search-wrapper {
+                margin-left: 0;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .emp-main-content {
+                padding: 12px;
+            }
+
+            .page-header {
+                grid-template-columns: auto 1fr;
+                row-gap: 8px;
+            }
+
+            .page-header h1 {
+                text-align: left;
+                font-size: 16px;
+            }
+
+            .header-date {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+
+            .mobile-menu-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: none;
+                height: auto;
+            }
+
+            .table-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .table-header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            th,
+            td {
+                font-size: 11px;
+                padding: 11px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <!-- SIDEBAR -->
+        <th:block th:replace="~{fragments/employee-sidebar :: sidebar}"></th:block>
+
+        <!-- MAIN CONTENT -->
+        <!-- MAIN CONTENT -->
+        <main class="emp-main-content">
+            <!-- HEADER -->
+            <div class="page-header">
+                <div>
+                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" type="button"
+                        aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"
+                            height="24">
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <h1 id="userName">Employee's Dashboard</h1>
+                <div class="header-date">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>Select date range</span>
+                </div>
+            </div>
+
+            <!-- DASHBOARD KPI GRID -->
+            <div class="dashboard-grid">
+                <!-- CLIENT FILTER -->
+                <div class="client-filter">
+                    <h3>Client Filter</h3>
+                    <div id="clientFilterList"></div>
+                </div>
+
+                <!-- TASK DISTRIBUTION CHART -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h2>Task Distribution</h2>
+                        <div class="icon-box">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="taskChart"></canvas>
+                        <div class="chart-center-label">
+                            <div class="label">OTC</div>
+                            <div class="value" id="otcValue" th:text="${dashboardStats.otc_score}">85%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS CARDS -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-total">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Total Tasks</div>
+                        <div class="stat-value" id="totalTasks" th:text="${dashboardStats.totalTasks}">45</div>
+                    </div>
+                    <div class="stat-card stat-ontime">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-title">On Time</div>
+                        <div class="stat-value" id="onTimeTasks" th:text="${dashboardStats.onTime}">30</div>
+                    </div>
+                    <div class="stat-card stat-overdue">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-title">Overdue</div>
+                        <div class="stat-value" id="overdueTasks" th:text="${dashboardStats.overdue}">5</div>
+                    </div>
+                    <div class="stat-card stat-delayed">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-title">Delayed</div>
+                        <div class="stat-value" id="delayedTasks" th:text="${dashboardStats.delayed}">8</div>
+                    </div>
+                    <div class="stat-card stat-progress">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path
+                                    d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">In Progress</div>
+                        <div class="stat-value" id="inProgressTasks" th:text="${dashboardStats.inProgress}">12</div>
+                    </div>
+                    <div class="stat-card stat-ats">
+                        <div class="stat-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                </polygon>
+                            </svg>
+                        </div>
+                        <div class="stat-title">ATS Score</div>
+                        <div class="stat-value" id="atsScore" th:text="${dashboardStats.ats_score}">92%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BAR -->
+            <div class="action-bar">
+                <button class="action-btn secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Filter
+                </button>
+                <button class="action-btn secondary" onclick="openBulkModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"></path>
+                        <rect x="9" y="3" width="6" height="4" rx="1"></rect>
+                    </svg>
+                    Bulk Assign
+                </button>
+                <button class="action-btn primary" onclick="openAssignModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Assign
+                </button>
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search tasks..." id="searchInput">
+                </div>
+            </div>
+
+            <!-- MY TASKS TABLE -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>My Function Tasks</h3>
+                    <div class="table-header-actions">
+                        <span class="badge" id="myTasksCount" th:text="${myTasks.size() + ' Records'}">0 Records</span>
+                        <button class="action-btn primary action-btn-small" onclick="submitBulkCompletion()"
+                            style="margin-right: 8px; background: #10b981;">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllMyTasks">
+                                </th>
+                                <th>Task ID</th>
+                                <th>Task</th>
+                                <th>Project / Client</th>
+                                <th>Assigned By/To</th>
+                                <th>Target Date</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Mark as Complete</th>
+                                <th class="text-center">Complete Form</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myTasksBody">
+                            <tr th:each="task : ${myTasks}">
+                                <td><input type="checkbox" class="task-checkbox" th:value="${task.taskId}"></td>
+                                <td class="task-id" th:text="${task.taskId}">TSK-001</td>
+                                <td class="task-title" th:text="${task.title}">Prepare Q1 Report</td>
+                                <td class="task-meta" th:text="${task.projectName + ' / ' + task.clientName}">Project
+                                    Alpha / Client A</td>
+                                <td>
+                                    <div th:if="${task.assignedToName != null and task.assignedToName != employeeName}">
+                                        <span
+                                            style="font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase;">To:</span>
+                                        <span th:text="${task.assignedToName}" style="font-weight: 600;">Assignee</span>
+                                    </div>
+                                    <div
+                                        th:unless="${task.assignedToName != null and task.assignedToName != employeeName}">
+                                        <span
+                                            style="font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase;">By:</span>
+                                        <span th:text="${task.assignedByName}" style="font-weight: 600;">Assigner</span>
+                                    </div>
+                                </td>
+                                <td style="color: #f97316; font-weight: 700;" th:text="${task.targetDate}">2024-10-15
+                                </td>
+                                <td class="text-center">
+                                    <span
+                                        th:class="${'status-badge ' + #strings.toLowerCase(#strings.replace(task.status, ' ', '-'))}"
+                                        th:text="${task.status}">In Progress</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check"
+                                        style="display: flex; justify-content: center; align-items: center;">
+                                        <input class="form-check-input task-complete-checkbox" type="checkbox"
+                                            th:id="${'completeTask-' + task.taskId}"
+                                            th:checked="${task.status == 'Completed'}" th:data-task-id="${task.taskId}"
+                                            style="width: 20px; height: 20px; cursor: pointer; accent-color: #10b981; border: 2px solid #cbd5e1; border-radius: 4px;">
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <button class="table-action-btn complete"
+                                        th:onclick="openCompleteModal([[${task.taskId}]], [[${task.title}]])">
+                                        Complete
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(myTasks)}">
+                                <td colspan="10" class="text-center" style="padding: 40px; color: #64748b;">
+                                    No active tasks found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- COMPLETED TASKS TABLE -->
+            <div class="table-container task-history-table">
+                <div class="table-header">
+                    <h3>Completed Tasks</h3>
+                    <span class="badge" id="completedTasksCount"
+                        th:text="${(completedTasks != null ? completedTasks.size() : 0) + ' Records'}">0
+                        Records</span>
+                </div>
+                <div class="table-scroll task-history-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task<br>ID</th>
+                                <th>Task</th>
+                                <th>Project / Client</th>
+                                <th>Assigned By</th>
+                                <th>Planned Target</th>
+                                <th>Completion Date</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">ATS Score</th>
+                                <th class="text-center">Remarks</th>
+                                <th class="text-center">File</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completedTasksBody">
+                            <tr th:each="task : ${completedTasks}">
+                                <td class="task-id" th:text="${task.taskId}">TSK-099</td>
+                                <td class="task-title" th:text="${task.title}">Database Migration</td>
+                                <td class="task-meta" th:text="${task.projectName + ' / ' + task.clientName}">Project
+                                    Beta / Client B</td>
+                                <td th:text="${task.assignedByName}">John Doe</td>
+                                <td style="color: #f97316; font-weight: 700;" th:text="${task.targetDate}">2024-10-15
+                                </td>
+                                <td style="color: #10b981; font-weight: 700;" th:text="${task.completionDate}">
+                                    2024-10-10</td>
+                                <td class="text-center">
+                                    <span
+                                        th:class="${'status-badge ' + #strings.toLowerCase(#strings.replace(task.status, ' ', '-'))}"
+                                        th:text="${task.status}">Completed</span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${task.atsScore != null}"
+                                        th:text="${#numbers.formatDecimal(task.atsScore * 100, 0, 0) + '%'}"
+                                        style="font-weight: 700; color: #f97316;">85%</span>
+                                    <span th:unless="${task.atsScore != null}">-</span>
+                                </td>
+                                <td class="task-meta" th:text="${task.remarks}">Successfully migrated</td>
+                                <td class="text-center">
+                                    <a th:if="${task.completionFile != null}"
+                                        th:href="${'/uploads/tasks/' + task.completionFile}" target="_blank">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                            stroke-width="2" style="cursor: pointer;">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </a>
+                                    <span th:unless="${task.completionFile != null}">-</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${completedTasks == null or completedTasks.isEmpty()}">
+                                <td colspan="10" class="text-center task-history-empty-cell">
+                                    No completed tasks found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DELEGATED TASKS TABLE -->
+            <div class="table-container task-history-table">
+                <div class="table-header">
+                    <h3>Delegated Tasks</h3>
+                    <span class="badge" id="delegatedTasksCount"
+                        th:text="${(delegatedTasks != null ? delegatedTasks.size() : 0) + ' Records'}">0
+                        Records</span>
+                </div>
+                <div class="table-scroll task-history-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task<br>ID</th>
+                                <th>Task</th>
+                                <th>Assigned To</th>
+                                <th>Project / Client</th>
+                                <th>Target Date</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">File</th>
+                                <th class="text-center">Complete Form</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delegatedTasksBody">
+                            <tr th:each="task : ${delegatedTasks}">
+                                <td class="task-id" th:text="${task.taskId}">TSK-201</td>
+                                <td class="task-title" th:text="${task.title}">Code Review</td>
+                                <td th:text="${task.assignedToName}">Mike Wilson</td>
+                                <td class="task-meta" th:text="${task.projectName + ' / ' + task.clientName}">Project
+                                    Gamma / Client C</td>
+                                <td style="color: #f97316; font-weight: 700;" th:text="${task.targetDate}">2024-10-20
+                                </td>
+                                <td class="text-center">
+                                    <span
+                                        th:class="${'status-badge ' + #strings.toLowerCase(#strings.replace(task.status, ' ', '-'))}"
+                                        th:text="${task.status}">In Progress</span>
+                                </td>
+                                <span th:unless="${task.assignedFile != null}">-</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="table-action-btn complete"
+                                        th:onclick="openCompleteModal([[${task.taskId}]], [[${task.title}]])">
+                                        Complete
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${delegatedTasks == null or delegatedTasks.isEmpty()}">
+                                <td colspan="8" class="text-center task-history-empty-cell">
+                                    No delegated tasks found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- COMPLETE TASK MODAL -->
+    <div class="modal-overlay" id="completeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <polyline points="9 15 11 17 15 13"></polyline>
+                    </svg>
+                    Submit Completion Report
+                </h2>
+                <button class="modal-close" onclick="closeCompleteModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="completeForm">
+                    <div class="form-group">
+                        <label class="form-label">Task ID</label>
+                        <input type="text" class="form-control" id="completeTaskId" placeholder="Enter Task ID"
+                            readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="completeTaskName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Remarks / Work Description</label>
+                        <textarea class="form-control" id="completeRemarks" rows="4"
+                            placeholder="Describe what was delivered..." required></textarea>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Upload Proof (Optional)</label>
+                        <input type="file" class="form-control" id="completeFile" accept=".pdf">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeCompleteModal()">Cancel</button>
+                <button type="submit" form="completeForm" class="modal-btn primary">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN TASK MODAL -->
+    <div class="modal-overlay" id="assignModal">
+        <div class="modal">
+            <div class="modal-header" style="background: #1e293b;">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Assign New Task
+                </h2>
+                <button class="modal-close" onclick="closeAssignModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="assignForm">
+                    <div class="form-group">
+                        <label class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="assignTaskName" placeholder="Enter task name..."
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Client</label>
+                        <input type="text" class="form-control" id="assignClient" placeholder="Enter Client Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project</label>
+                        <input type="text" class="form-control" id="assignProject" placeholder="Enter Project Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assigned To</label>
+                        <select class="form-control" id="assignUser" required>
+                            <option value="">Select Team Member</option>
+                            <option th:each="emp : ${allEmployees}" th:value="${emp.name}" th:text="${emp.name}">
+                                Employee Name</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date</label>
+                        <input type="date" class="form-control" id="assignDate" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Attachment (Optional)</label>
+                        <input type="file" class="form-control" id="assignFile">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeAssignModal()">Cancel</button>
+                <button type="submit" form="assignForm" class="modal-btn primary"
+                    style="background: #1e293b;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BULK ASSIGN MODAL -->
+    <div class="modal-overlay" id="bulkModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header" style="background: #1e293b;">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"></path>
+                        <rect x="9" y="3" width="6" height="4" rx="1"></rect>
+                    </svg>
+                    Bulk Assign Tasks
+                </h2>
+                <button class="modal-close" onclick="closeBulkModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 32px;">
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 24px;">
+                    <strong>Note:</strong> Full functionality with editable table will be added later. For now, this is
+                    a placeholder.
+                </p>
+                <div
+                    style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center;">
+                    <p style="font-size: 14px; color: #94a3b8; font-weight: 600;">Bulk Assign Table Coming Soon</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeBulkModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const dashboardStats = /*[[${dashboardStats}]]*/ {};
+        const userName = /*[[${employeeName}]]*/ 'Employee';
+        /*]]>*/
+
+        // INITIALIZE
+        document.addEventListener('DOMContentLoaded', function () {
+            // Capitalize USERNAME for display
+            const displayUser = userName ? userName.toUpperCase() : 'EMPLOYEE';
+            document.getElementById('userName').textContent = `${displayUser}'S DASHBOARD`;
+            initChart();
+            handleUrlParams();
+            buildClientFilter();
+
+            // Setup Form Listeners
+            const assignForm = document.getElementById('assignForm');
+            if (assignForm) {
+                assignForm.addEventListener('submit', handleAssignSubmit);
+            }
+
+            const completeForm = document.getElementById('completeForm');
+            if (completeForm) {
+                completeForm.addEventListener('submit', handleCompleteSubmit);
+            }
+
+            // Select All My Tasks
+            const selectAllMyTasks = document.getElementById('selectAllMyTasks');
+            if (selectAllMyTasks) {
+                selectAllMyTasks.addEventListener('change', function () {
+                    const checkboxes = document.querySelectorAll('#myTasksBody .task-complete-checkbox');
+                    checkboxes.forEach(cb => {
+                        cb.checked = this.checked;
+                    });
+                });
+            }
+        });
+
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('status');
+            const section = params.get('section');
+
+            if (section === 'completed') {
+                const el = document.querySelector('.table-container:nth-of-type(2)'); // Completed table container
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            if (status) {
+                // Filter My Tasks Table
+                const rows = document.querySelectorAll('#myTasksBody tr');
+                let found = false;
+                rows.forEach(row => {
+                    const badge = row.querySelector('.status-badge');
+                    if (badge) {
+                        const text = badge.textContent.trim().toLowerCase();
+                        // Loose matching
+                        if (!text.includes(status.toLowerCase())) {
+                            row.style.display = 'none';
+                        } else {
+                            found = true;
+                        }
+                    }
+                });
+
+                // Scroll to My Tasks if we are filtering it
+                const el = document.querySelector('.table-container');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // BUILD CLIENT FILTER dynamically from task rows
+        function buildClientFilter() {
+            const container = document.getElementById('clientFilterList');
+            if (!container) return;
+
+            // Collect unique client names from all .task-meta cells in all task tables
+            const clientSet = new Set();
+            document.querySelectorAll('#myTasksBody .task-meta, #completedTasksBody .task-meta, #delegatedTasksBody .task-meta').forEach(cell => {
+                const text = cell.textContent.trim();
+                // Format is "Project / Client" — extract client (part after " / ")
+                const parts = text.split('/');
+                if (parts.length >= 2) {
+                    const client = parts[parts.length - 1].trim();
+                    if (client) clientSet.add(client);
+                }
+            });
+
+            if (clientSet.size === 0) {
+                container.innerHTML = '<span style="font-size:10px;color:#94a3b8;">No clients found</span>';
+                return;
+            }
+
+            container.innerHTML = '';
+            clientSet.forEach(client => {
+                const label = document.createElement('label');
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = true;
+                cb.addEventListener('change', () => filterRowsByClient());
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode(' ' + client));
+                container.appendChild(label);
+            });
+        }
+
+        // FILTER rows in My Tasks by selected clients
+        function filterRowsByClient() {
+            const checkboxes = document.querySelectorAll('#clientFilterList input[type="checkbox"]');
+            const active = new Set();
+            checkboxes.forEach(cb => { if (cb.checked) active.add(cb.parentElement.textContent.trim()); });
+
+            document.querySelectorAll('#myTasksBody tr').forEach(row => {
+                const meta = row.querySelector('.task-meta');
+                if (!meta) return;
+                const parts = meta.textContent.trim().split('/');
+                const client = parts.length >= 2 ? parts[parts.length - 1].trim() : '';
+                row.style.display = (active.size === 0 || active.has(client)) ? '' : 'none';
+            });
+        }
+
+        // SUBMIT BULK COMPLETION
+        async function submitBulkCompletion() {
+            const checkedBoxes = document.querySelectorAll('.task-complete-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert('Please select at least one task to mark as complete.');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to mark ${checkedBoxes.length} task(s) as completed?`)) {
+                return;
+            }
+
+            const results = { success: 0, fail: 0 };
+            const promises = Array.from(checkedBoxes).map(async (cb) => {
+                const taskId = cb.dataset.taskId;
+                try {
+                    const formData = new FormData();
+                    formData.append('remarks', 'Bulk completed');
+
+                    const response = await fetch(`/employee/task-manager/api/tasks/${encodeURIComponent(taskId)}/complete`, {
+                        method: 'PATCH',
+                        body: formData
+                    });
+                    if (response.ok) results.success++;
+                    else results.fail++;
+                } catch (err) {
+                    console.error('Error completing task:', taskId, err);
+                    results.fail++;
+                }
+            });
+
+            await Promise.all(promises);
+
+            alert(`Bulk action complete: ${results.success} succeeded, ${results.fail} failed.`);
+            window.location.reload();
+        }
+
+        // CHART.JS INITIALIZATION
+        function initChart() {
+            const canvas = document.getElementById('taskChart');
+            if (!canvas || !dashboardStats) return;
+
+            const rawData = Array.isArray(dashboardStats.chart_data) ? dashboardStats.chart_data : [];
+            let labels = rawData.map(d => d.name || 'Unknown');
+            let values = rawData.map(d => Number(d.value) || 0);
+            let colors = rawData.map(d => d.color || '#94a3b8');
+
+            const total = values.reduce((sum, v) => sum + v, 0);
+            if (total <= 0) {
+                // Keep donut visible even when status buckets are empty.
+                labels = ['No Status Data'];
+                values = [1];
+                colors = ['#cbd5e1'];
+            }
+
+            if (window.taskDistributionChart) {
+                window.taskDistributionChart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.taskDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        hoverOffset: 12,
+                        borderRadius: 6,
+                        borderWidth: 0,
+                        spacing: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            padding: 12,
+                            backgroundColor: '#1e293b',
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            cornerRadius: 10,
+                            displayColors: true
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true,
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        async function handleCompleteSubmit(e) {
+            e.preventDefault();
+
+            const taskId = (document.getElementById('completeTaskId')?.value || '').trim();
+            const remarks = (document.getElementById('completeRemarks')?.value || '').trim();
+            const fileInput = document.getElementById('completeFile');
+
+            if (!taskId) {
+                alert('Please enter Task ID.');
+                return;
+            }
+
+            if (!remarks) {
+                alert('Please add remarks before submitting.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('remarks', remarks);
+            if (fileInput && fileInput.files[0]) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch(`/employee/task-manager/api/tasks/${encodeURIComponent(taskId)}/complete`, {
+                    method: 'PATCH',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Task marked as completed.');
+                    closeCompleteModal();
+                    window.location.reload();
+                } else {
+                    const error = await response.json().catch(() => ({}));
+                    alert(error.error || 'Could not complete task. Check Task ID and try again.');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to complete task.');
+            }
+        }
+
+        // MODAL FUNCTIONS
+        function openCompleteModal(taskId, taskName) {
+            if (taskId) {
+                document.getElementById('completeTaskId').value = taskId;
+            }
+            if (taskName) {
+                document.getElementById('completeTaskName').value = taskName;
+            }
+            document.getElementById('completeModal').classList.add('show');
+        }
+
+        async function quickComplete(taskId) {
+            if (!confirm('Quick complete this task?')) return;
+
+            const formData = new FormData();
+            formData.append('remarks', 'Quick completed from dashboard');
+
+            try {
+                const response = await fetch(`/employee/task-manager/api/tasks/${encodeURIComponent(taskId)}/complete`, {
+                    method: 'PATCH',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Could not complete task.');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function closeCompleteModal() {
+            document.getElementById('completeModal').classList.remove('show');
+        }
+
+
+        function openAssignModal(forSelf = false) {
+            document.getElementById('assignModal').classList.add('show');
+            if (forSelf && typeof userName !== 'undefined') {
+                const select = document.getElementById('assignUser');
+                // Select option by text (name)
+                // Since values are names now, we can set the value directly
+                select.value = userName;
+
+                // If direct value assignment fails (e.g. case sensitivity), try finding option
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text.toLowerCase() === userName.toLowerCase()) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('show');
+        }
+
+        function openBulkModal() {
+            document.getElementById('bulkModal').classList.add('show');
+        }
+
+        function closeBulkModal() {
+            document.getElementById('bulkModal').classList.remove('show');
+        }
+
+        // HANDLE ASSIGN SUBMIT
+        async function handleAssignSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('assignTaskName').value);
+            formData.append('clientName', document.getElementById('assignClient').value);
+            formData.append('projectName', document.getElementById('assignProject').value);
+            formData.append('assignedToName', document.getElementById('assignUser').value); // Send Name as ID/Name
+            formData.append('targetDate', document.getElementById('assignDate').value);
+
+            const fileInput = document.getElementById('assignFile');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/employee/task-manager/api/tasks', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Task assigned successfully!');
+                    closeAssignModal();
+                    // Reload page to show new task (or fetch via AJAX)
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error assigning task: ' + (error.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to assign task.');
+            }
+        }
+
+        // CLOSE MODAL ON OUTSIDE CLICK
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

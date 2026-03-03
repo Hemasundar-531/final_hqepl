@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${admin.companyName != null ? admin.companyName : admin.username} + ' - Company Detail'">Company
+        Detail</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1A56DB;
+            --primary-hover: #1648B8;
+            --bg: #F0F4FA;
+            --card: #ffffff;
+            --text: #1E293B;
+            --muted: #64748B;
+            --line: #E2E8F0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, .06);
+            --shadow-md: 0 4px 14px rgba(0, 0, 0, .08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, .12);
+            --glow: 0 0 0 3px rgba(26, 86, 219, .15);
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --hover-yellow-bg: #FFF7D6;
+            --hover-yellow-border: #F6D76A;
+            --hover-yellow-text: #7A5400;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ── Header ── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .top-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-plus-wrap {
+            position: relative;
+        }
+
+        .quick-plus-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FFD700, #FDB931);
+            border: none;
+            color: #7A5400;
+            font-size: 1.8rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #D4Af37, 0 8px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .quick-plus-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #FFE033, #FFCA28);
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: -1;
+        }
+
+        .quick-plus-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 0 #D4Af37, 0 12px 20px rgba(253, 185, 49, 0.4);
+            color: #583C00;
+            animation: bounce 0.6s cubic-bezier(0.280, 0.840, 0.420, 1);
+        }
+
+        .quick-plus-btn:hover::before {
+            opacity: 1;
+        }
+
+        .quick-plus-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #D4Af37, 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: scale(1) translateY(0);
+            }
+
+            30% {
+                transform: scale(1.1) translateY(-4px);
+            }
+
+            50% {
+                transform: scale(1.05) translateY(0);
+            }
+
+            70% {
+                transform: scale(1.08) translateY(-2px);
+            }
+
+            100% {
+                transform: scale(1.05) translateY(-2px);
+            }
+        }
+
+        .quick-plus-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 260px;
+            background: #1F2329;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+            padding: 8px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .quick-plus-dropdown.show {
+            display: block;
+            animation: fadeIn .16s ease-out;
+        }
+
+        .quick-plus-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.12);
+            margin: 8px 4px;
+        }
+
+        .quick-plus-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #E5E7EB;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+            z-index: 2000;
+            pointer-events: auto;
+        }
+
+        .quick-plus-item-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-plus-item-icon {
+            width: 18px;
+            height: 18px;
+            color: #C9D2E3;
+            flex-shrink: 0;
+        }
+
+        .quick-plus-item-hint {
+            font-size: 0.76rem;
+            color: #9CA3AF;
+            font-weight: 500;
+        }
+
+        .quick-plus-item:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #FFFFFF;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            color: var(--text);
+            text-decoration: none;
+            transition: all .2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .company-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .company-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--line);
+        }
+
+        .company-logo-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #3B82F6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-family: "Sora", sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .company-title {
+            font-family: "Sora", sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .company-email {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .btn-create {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: var(--primary);
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-create:hover {
+            background: var(--hover-yellow-bg);
+            color: var(--hover-yellow-text);
+            border-color: var(--hover-yellow-border);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 0 1 200px;
+            min-width: 120px;
+            background: var(--card);
+            border-radius: 10px;
+            padding: 12px 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--line);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-family: "Sora", sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-value.blue {
+            color: var(--primary);
+        }
+
+        .stat-value.green {
+            color: var(--success);
+        }
+
+        .stat-value.amber {
+            color: var(--warning);
+        }
+
+        /* ── Section title ── */
+        .section-title {
+            font-family: "Sora", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        /* ── Folder Grid ── */
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .folder-card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
+            transition: all .25s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .folder-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .folder-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #3B82F6);
+            opacity: 0;
+            transition: opacity .25s;
+        }
+
+        .folder-card:hover::before {
+            opacity: 1;
+        }
+
+        .folder-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #EFF6FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            color: var(--primary);
+        }
+
+        .folder-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .folder-meta {
+            font-size: 0.78rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .folder-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .folder-status.configured {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .folder-status.pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .folder-steps {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        /* ── Add New Card ── */
+        .folder-card-add {
+            background: rgba(59, 130, 246, 0.04);
+            border-radius: 14px;
+            padding: 20px;
+            border: 2px dashed #CBD5E1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all .25s;
+            min-height: 140px;
+            text-decoration: none;
+        }
+
+        .folder-card-add:hover {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .folder-card-add-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all .25s;
+        }
+
+        .folder-card-add:hover .folder-card-add-icon {
+            transform: scale(1.1);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .folder-card-add-text {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 0.95rem;
+            transition: color .25s;
+        }
+
+        .folder-card-add:hover .folder-card-add-text {
+            color: var(--primary);
+        }
+
+        /* ── Empty ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--muted);
+            background: var(--card);
+            border-radius: 14px;
+            border: 2px dashed var(--line);
+        }
+
+        .empty-state svg {
+            margin-bottom: 12px;
+            opacity: .4;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
+        /* ── Animation ── */
+        .fade-in {
+            animation: fadeUp .4s ease both;
+        }
+
+        .fade-in-delay {
+            animation: fadeUp .4s ease .1s both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                padding: 16px 12px;
+            }
+
+            .company-title {
+                font-size: 1.2rem;
+            }
+
+            .folder-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #fff;
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav-brand {
+            font-family: "Sora", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            margin-left: 40px;
+        }
+
+        .nav-item {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            padding: 4px 0;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 1px solid var(--line);
+            transition: all 0.2s;
+            background: #fff;
+            cursor: default;
+        }
+
+        .nav-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #EFF6FF;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .nav-user {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .nav-logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: var(--muted);
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .nav-logout:hover {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* ── Dropdown ── */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 120%;
+            background-color: #fff;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            z-index: 1000;
+            border: 1px solid var(--line);
+            overflow: hidden;
+            animation: contentFadeIn .2s forwards;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: var(--text);
+            padding: 12px 18px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #F8FAFC;
+            color: var(--primary);
+            padding-left: 22px;
+        }
+
+        .fms-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .fms-modal-overlay.open {
+            display: flex;
+        }
+
+        .fms-modal {
+            width: 100%;
+            max-width: 380px;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 24px;
+            animation: modalPop .2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .new-fms-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+
+        .new-fms-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .new-fms-input {
+            width: 100%;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 1rem;
+            color: #1E293B;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .new-fms-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .new-fms-actions {
+            width: 100%;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            background: transparent;
+            color: #64748B;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--hover-yellow-bg);
+            color: var(--hover-yellow-text);
+        }
+
+        /* Primary style for the Create button */
+        #newFmsCreateBtn {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        #newFmsCreateBtn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .new-fms-feedback {
+            margin-top: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .new-fms-feedback.error {
+            color: var(--danger);
+        }
+
+        .new-fms-feedback.success {
+            color: #166534;
+        }
+
+        .flow-open-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 20px;
+        }
+
+        .flow-open-overlay.open {
+            display: flex;
+        }
+
+        .flow-open-modal {
+            width: min(560px, 100%);
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .flow-open-title {
+            font-family: "Sora", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .flow-open-admin {
+            background: #F8FAFC;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.92rem;
+            margin-bottom: 12px;
+        }
+
+        .flow-open-admin-link {
+            color: var(--primary);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(26, 86, 219, 0.5);
+            padding-bottom: 1px;
+            transition: all .2s ease;
+        }
+
+        .flow-open-admin-link:hover {
+            color: var(--hover-yellow-text);
+            border-bottom-color: var(--hover-yellow-border);
+            background: var(--hover-yellow-bg);
+            border-radius: 6px;
+            padding: 1px 6px 2px;
+        }
+
+        .flow-open-employees {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            height: 320px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 8px;
+            background: #fff;
+            scrollbar-width: thin;
+            scrollbar-color: #CBD5E1 transparent;
+        }
+
+        .flow-open-employees::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .flow-open-employees::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .flow-open-employees::-webkit-scrollbar-thumb {
+            background-color: #CBD5E1;
+            border-radius: 6px;
+        }
+
+        .flow-open-employees::-webkit-scrollbar-thumb:hover {
+            background-color: #94A3B8;
+        }
+
+        .employee-search-wrap {
+            margin-bottom: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #fff;
+            padding-bottom: 6px;
+        }
+
+        .employee-search-input {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: #fff;
+            outline: none;
+        }
+
+        .employee-search-input:focus {
+            border-color: var(--primary);
+            box-shadow: var(--glow);
+        }
+
+        .employee-item-btn {
+            width: 100%;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: #fff;
+            text-align: left;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all .2s ease;
+            color: var(--text);
+        }
+
+        .employee-item-btn:hover {
+            background: var(--hover-yellow-bg);
+            border-color: var(--hover-yellow-border);
+            box-shadow: 0 2px 8px rgba(122, 84, 0, 0.08);
+        }
+
+        .employee-item-btn.active {
+            background: #EFF6FF;
+            border-color: var(--primary);
+        }
+
+        .flow-open-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @keyframes contentFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                top: 105%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div style="display:flex;align-items:center;">
+            <a href="/superadmin/dashboard" class="nav-brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                HereQuality
+            </a>
+            <div class="nav-links">
+                <a href="/superadmin/dashboard" class="nav-item">Dashboard</a>
+                <a href="/superadmin/company-manage" class="nav-item active">Companies</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-profile">
+                <div class="nav-avatar">SA</div>
+                <span class="nav-user">Super Admin</span>
+            </div>
+            <a href="/logout" class="nav-logout" title="Logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </nav>
+    <div class="shell">
+        <!-- Header -->
+        <div class="top-bar fade-in">
+            <div class="top-left">
+                <a href="/superadmin/company-manage" class="back-btn" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </a>
+                <div class="company-info">
+                    <img th:if="${admin.companyLogo != null}" th:src="${admin.companyLogo}" alt="Logo"
+                        class="company-logo">
+                    <div th:unless="${admin.companyLogo != null}" class="company-logo-placeholder">
+                        <span
+                            th:text="${(admin.companyName != null ? admin.companyName : admin.username).substring(0,1).toUpperCase()}">C</span>
+                    </div>
+                    <div>
+                        <h1 class="company-title"
+                            th:text="${admin.companyName != null ? admin.companyName : admin.username}">Company Name
+                        </h1>
+                        <p class="company-email" th:text="${admin.email != null ? admin.email : admin.username}">
+                            email@company.com</p>
+                    </div>
+                </div>
+            </div>
+            <div class="top-right-actions">
+                <div class="quick-plus-wrap">
+                    <button class="quick-plus-btn" type="button" title="Quick Create"
+                        onclick="toggleQuickPlusMenu(event)">+</button>
+                    <div id="quickPlusDropdown" class="quick-plus-dropdown">
+                        <button class="quick-plus-item" type="button" onclick="showNewFmsPanel(event)">
+                            <span class="quick-plus-item-left">
+                                <svg class="quick-plus-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                    </path>
+                                </svg>
+                                New FMS
+                            </span>
+                            <span class="quick-plus-item-hint">N</span>
+                        </button>
+                        <div class="quick-plus-divider"></div>
+                        <button
+                            th:if="${admin.permissions == null or !admin.permissions.contains('COMPANY_TASK_MANAGEMENT')}"
+                            class="quick-plus-item" type="button" onclick="showTaskManagement(event)">
+                            <span class="quick-plus-item-left">
+                                <svg class="quick-plus-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                Task Management
+                            </span>
+                            <span class="quick-plus-item-hint">T</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="newFmsModalOverlay" class="fms-modal-overlay" onclick="onModalOverlayClick(event)">
+            <div class="fms-modal" role="dialog" aria-modal="true" aria-labelledby="newFmsModalTitle">
+                <div id="newFmsModalTitle" class="new-fms-title">Create New FMS</div>
+                <form th:action="'/superadmin/company-detail/' + ${admin.id} + '/create-fms'" method="post">
+                    <div class="new-fms-row">
+                        <input id="newFmsInput" name="name" class="new-fms-input" type="text" maxlength="200"
+                            placeholder="Enter FMS name" required>
+                        <div th:if="${fmsError}" class="new-fms-feedback error" th:text="${fmsError}"></div>
+                        <div th:if="${fmsSuccess}" class="new-fms-feedback success" th:text="${fmsSuccess}"></div>
+                        <div class="new-fms-actions">
+                            <button class="btn-secondary" type="button" onclick="closeNewFmsModal()">Cancel</button>
+                            <button id="newFmsCreateBtn" class="btn-secondary" type="submit">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row fade-in">
+            <div class="stat-card">
+                <div class="stat-label">Total FMS Flows</div>
+                <div class="stat-value blue" th:text="${#lists.size(folders)}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Configured</div>
+                <div class="stat-value green" th:text="${configuredCount}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Pending Setup</div>
+                <div class="stat-value amber" th:text="${pendingCount}">0</div>
+            </div>
+        </div>
+
+        <!-- FMS Folders -->
+        <h2 class="section-title fade-in-delay">FMS Flows</h2>
+
+        <div th:if="${!#lists.isEmpty(folders)}" class="folder-grid fade-in-delay">
+            <a th:each="folder : ${folders}"
+                th:href="@{/superadmin/company-detail/{adminId}/folder/{folderId}(adminId=${admin.id},folderId=${folder.id})}"
+                class="folder-card" th:attr="data-folder-name=${folder.name}" onclick="openFlowPopup(event, this)"
+                style="text-decoration:none; color:inherit;">
+                <div class="folder-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="folder-name" th:text="${folder.name}">Flow Name</div>
+                <div class="folder-meta">
+                    <span th:if="${folder.configured}" class="folder-status configured">✓ Configured</span>
+                    <span th:unless="${folder.configured}" class="folder-status pending">⏳ Pending</span>
+                    <span class="folder-steps"
+                        th:text="${folder.processDetails != null ? #lists.size(folder.processDetails) : 0} + ' steps'">0
+                        steps</span>
+                </div>
+            </a>
+
+            <a href="#" onclick="showNewFmsPanel(event)" class="folder-card-add">
+                <div class="folder-card-add-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+                <div class="folder-card-add-text">Create New FMS</div>
+            </a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(folders)}" class="empty-state fade-in-delay">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <p>No FMS flows assigned to this company yet.</p>
+            <a href="#" onclick="showNewFmsPanel(event)" class="btn-create">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create FMS Flow
+            </a>
+        </div>
+    </div>
+
+    <!-- Task Management -->
+    <div id="task-management" class="shell"
+        th:style="${admin.permissions != null and admin.permissions.contains('COMPANY_TASK_MANAGEMENT')} ? 'padding-top: 0;' : 'padding-top: 0; display: none;'">
+        <h2 class="section-title fade-in-delay">Task Management</h2>
+
+        <div class="folder-grid fade-in-delay">
+            <div class="folder-card" style="cursor: default; border-color: var(--primary); max-width: 320px;">
+                <div class="folder-icon" style="background: #ede9fe; color: #8b5cf6;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                </div>
+                <div class="folder-name">Task Manager</div>
+                <div class="folder-meta" style="margin-bottom: 16px;">
+                    Control access for all employees
+                </div>
+
+                <div th:if="${admin.permissions != null and admin.permissions.contains('COMPANY_TASK_MANAGEMENT')}"
+                    style="background: #f0fdf4; padding: 12px; border-radius: 10px; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 8px; color: #166534; font-weight: 600; font-size: 0.9rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Status: Active
+                </div>
+
+                <form th:unless="${admin.permissions != null and admin.permissions.contains('COMPANY_TASK_MANAGEMENT')}"
+                    th:action="'/superadmin/company-detail/' + ${admin.id} + '/update-permissions'" method="post">
+                    <div
+                        style="background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 16px;">
+                        <div class="form-check form-switch" style="display:flex; align-items:center; gap:10px;">
+                            <input class="form-check-input" type="checkbox" id="taskManagementToggle"
+                                name="taskManagement" style="cursor:pointer; width: 36px; height: 20px;">
+                            <label class="form-check-label" for="taskManagementToggle"
+                                style="font-weight:600; cursor:pointer; font-size:0.9rem; margin:0;">
+                                Enable Access
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-create" style="width:100%; justify-content:center; border:none;">
+                        Save Permission
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div th:if="${editMode}" class="modal-overlay active">
+        <!-- ... existing modal ... -->
+    </div>
+
+    <div id="flowOpenOverlay" class="flow-open-overlay" onclick="onFlowOpenOverlayClick(event)">
+        <div class="flow-open-modal" role="dialog" aria-modal="true" aria-labelledby="flowOpenTitle">
+            <div id="flowOpenTitle" class="flow-open-title">Open FMS Flow</div>
+            <div class="flow-open-admin">
+                <strong>Admin Name:</strong>
+                <a href="#" class="flow-open-admin-link" onclick="goToSelectedFlow(); return false;"
+                    th:text="${admin.email != null ? admin.email : admin.username}">mark@gmail.com</a>
+            </div>
+            <div class="employee-search-wrap">
+                <input id="employeeSearchInput" type="text" class="employee-search-input"
+                    placeholder="Search employees by name or email..." oninput="filterEmployees()">
+            </div>
+            <div style="font-weight:600; margin-bottom:8px;">Company Employees</div>
+            <div class="flow-open-employees">
+                <button type="button" class="employee-item-btn" th:each="emp : ${companyEmployees}"
+                    th:attr="data-employee-id=${emp.id},data-employee-name=${emp.name},data-employee-email=${emp.email},data-permissions=${#strings.listJoin(emp.permissions, ',')}"
+                    onclick="selectEmployee(this)">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                        <div style="font-weight:600;">
+                            <span th:text="${emp.name}">Employee Name</span>
+                            <span class="oe-badge"
+                                style="display:none; color: var(--danger); font-size: 0.75rem; font-weight: 700; margin-left: 6px;">(Order
+                                Entry)</span>
+                        </div>
+                    </div>
+                    <div style="font-size:0.84rem; color:var(--muted);" th:text="${emp.email}">employee@company.com
+                    </div>
+                </button>
+                <div th:if="${#lists.isEmpty(companyEmployees)}" class="empty-state"
+                    style="padding:20px 12px; border:none; background:transparent;">
+                    <p style="margin:0;">No employees found for this company.</p>
+                </div>
+                <div id="employeeSearchEmpty" class="empty-state"
+                    style="padding:20px 12px; border:none; background:transparent; display:none;">
+                    <p style="margin:0;">No employees match your search.</p>
+                </div>
+            </div>
+            <div class="flow-open-actions">
+                <button type="button" class="btn-secondary" onclick="closeFlowPopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFlowUrl = '';
+        let selectedEmployeeName = '';
+        let selectedAdminId = '';
+        let selectedFolderId = '';
+
+        function toggleQuickPlusMenu(e) {
+            e.stopPropagation();
+            const quick = document.getElementById('quickPlusDropdown');
+            if (quick) quick.classList.toggle('show');
+        }
+
+        function openFlowPopup(e, el) {
+            e.preventDefault();
+            selectedFlowUrl = el.getAttribute('href') || '';
+            const flowMatch = selectedFlowUrl.match(/\/superadmin\/company-detail\/([^/]+)\/folder\/([^/?#]+)/);
+            selectedAdminId = flowMatch ? flowMatch[1] : '';
+            selectedFolderId = flowMatch ? flowMatch[2] : '';
+
+            // Update badges in the modal based on selectedFolderId
+            document.querySelectorAll('.employee-item-btn').forEach(btn => {
+                const perms = btn.getAttribute('data-permissions') || '';
+                const badge = btn.querySelector('.oe-badge');
+                if (badge) {
+                    const isOe = perms.split(',').includes(`ORDER_ENTRY:${selectedFolderId}`);
+                    badge.style.display = isOe ? 'inline' : 'none';
+                }
+            });
+
+            const overlay = document.getElementById('flowOpenOverlay');
+            if (overlay) overlay.classList.add('open');
+            const input = document.getElementById('employeeSearchInput');
+            if (input) {
+                input.value = '';
+                filterEmployees();
+                setTimeout(() => input.focus(), 30);
+            }
+        }
+
+        function closeFlowPopup() {
+            const overlay = document.getElementById('flowOpenOverlay');
+            if (overlay) overlay.classList.remove('open');
+            selectedEmployeeName = '';
+            document.querySelectorAll('.employee-item-btn.active').forEach((item) => item.classList.remove('active'));
+        }
+
+        function onFlowOpenOverlayClick(e) {
+            if (e.target && e.target.id === 'flowOpenOverlay') {
+                closeFlowPopup();
+            }
+        }
+
+        function selectEmployee(btn) {
+            document.querySelectorAll('.employee-item-btn.active').forEach((item) => item.classList.remove('active'));
+            btn.classList.add('active');
+            selectedEmployeeName = btn.getAttribute('data-employee-name') || '';
+            const employeeId = btn.getAttribute('data-employee-id') || '';
+            if (!employeeId || !selectedAdminId || !selectedFolderId) return;
+            window.location.href = '/superadmin/company-detail/' + encodeURIComponent(selectedAdminId)
+                + '/folder/' + encodeURIComponent(selectedFolderId)
+                + '/employee/' + encodeURIComponent(employeeId) + '/order-entry';
+        }
+
+        function goToSelectedFlow() {
+            if (!selectedFlowUrl) return;
+            window.location.href = selectedFlowUrl;
+        }
+
+        function filterEmployees() {
+            const input = document.getElementById('employeeSearchInput');
+            const emptyState = document.getElementById('employeeSearchEmpty');
+            const query = (input?.value || '').trim().toLowerCase();
+            const items = document.querySelectorAll('.employee-item-btn');
+            let visibleCount = 0;
+
+            items.forEach((item) => {
+                const name = (item.getAttribute('data-employee-name') || '').toLowerCase();
+                const email = (item.getAttribute('data-employee-email') || '').toLowerCase();
+                const match = !query || name.includes(query) || email.includes(query);
+                item.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? '' : 'none';
+            }
+        }
+
+        function showTaskManagement(e) {
+            e.preventDefault();
+            const section = document.getElementById('task-management');
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+            // Close dropdown
+            const quick = document.getElementById('quickPlusDropdown');
+            if (quick) quick.classList.remove('show');
+        }
+
+        function showNewFmsPanel(e) {
+            e.preventDefault();
+            const modal = document.getElementById('newFmsModalOverlay');
+            const quick = document.getElementById('quickPlusDropdown');
+            const input = document.getElementById('newFmsInput');
+            if (quick) {
+                quick.classList.remove('show');
+            }
+            if (modal) {
+                modal.classList.add('open');
+            }
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }
+
+        function closeNewFmsModal() {
+            const modal = document.getElementById('newFmsModalOverlay');
+            const input = document.getElementById('newFmsInput');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+            if (input) {
+                input.value = '';
+            }
+        }
+
+        function onModalOverlayClick(e) {
+            if (e.target && e.target.id === 'newFmsModalOverlay') {
+                closeNewFmsModal();
+            }
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeFlowPopup();
+                closeNewFmsModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const hasError = !!document.querySelector('#newFmsModalOverlay .new-fms-feedback.error');
+            if (hasError) {
+                const modal = document.getElementById('newFmsModalOverlay');
+                if (modal) {
+                    modal.classList.add('open');
+                }
+            }
+        });
+
+        window.onclick = function (e) {
+            if (!e.target.matches('.btn-create') && !e.target.closest('.btn-create')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+            if (!e.target.matches('.quick-plus-btn') && !e.target.closest('.quick-plus-wrap')) {
+                const quick = document.getElementById('quickPlusDropdown');
+                if (quick) quick.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+
+</html>

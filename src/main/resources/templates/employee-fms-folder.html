@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title
+        th:text="${currentFolder != null ? currentFolder.name + ' - Employee Portal' : 'FMS Folder - Employee Portal'}">
+        FMS Folder - Employee Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(59, 130, 246, 0.14), transparent 36%),
+                radial-gradient(circle at 92% 0%, rgba(16, 185, 129, 0.10), transparent 34%),
+                #edf3fb;
+            color: #1e293b;
+        }
+
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --primary: #10b981;
+            --radius: 12px;
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR - Reuse from employee-manager.html */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #132a63, #1f3c88);
+            color: #fff;
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar .brand span {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #e9efff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(3px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT AREA */
+        .emp-main-content {
+            flex: 1;
+            padding: 12px 16px;
+            overflow-y: auto;
+            background: #f1f5f9;
+            max-height: 100vh;
+            /* margin-left handled by flex container in app-shell */
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* HEADER - Enhanced UI/UX */
+        .page-header {
+            background:
+                radial-gradient(circle at 15% 10%, rgba(249, 115, 22, 0.18), transparent 38%),
+                radial-gradient(circle at 90% 0%, rgba(59, 130, 246, 0.20), transparent 42%),
+                linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+            border-radius: 16px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            color: white;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.28);
+            margin-bottom: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .header-kicker {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .page-header h1 {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #f8fafc;
+            text-transform: uppercase;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.1;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            color: #cbd5e1;
+            opacity: 0.95;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            padding: 8px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(6px);
+            white-space: nowrap;
+        }
+
+        .header-date strong {
+            font-size: 11px;
+            font-weight: 800;
+            color: #f97316;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr 1.25fr;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: stretch;
+        }
+
+        .dashboard-grid>* {
+            min-width: 0;
+        }
+
+        /* CLIENT FILTER */
+        .client-filter {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            box-shadow: var(--shadow);
+            height: 100%;
+            align-self: stretch;
+        }
+
+        .section-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title .title-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            line-height: 1;
+            color: #1d4ed8;
+            background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+            border: 1px solid #bfdbfe;
+        }
+
+        .client-filter h3 {
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .client-filter label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #0f172a;
+            font-weight: 600;
+            margin-bottom: 6px;
+            cursor: pointer;
+        }
+
+        .client-filter input[type="checkbox"] {
+            accent-color: #1e293b;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        /* CHART CARD */
+        .chart-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 12px 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chart-card-header h2 {
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #1e293b;
+        }
+
+        .chart-card-header .icon-box {
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f97316;
+        }
+
+        .chart-wrapper {
+            height: 146px;
+            position: relative;
+        }
+
+        .chart-center-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .chart-center-label .label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-center-label .value {
+            font-size: 34px;
+            font-weight: 900;
+            color: #1e293b;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 12px 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border-top: 3px solid #6366f1;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 2px;
+            cursor: default;
+            min-height: 104px;
+        }
+
+        .stat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .stat-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+            border: 1px solid transparent;
+            background: #f8fafc;
+        }
+
+        .stats-grid .stat-card:nth-child(1) .stat-icon {
+            color: #4f46e5;
+            background: #e0e7ff;
+            border-color: #c7d2fe;
+        }
+
+        .stats-grid .stat-card:nth-child(2) .stat-icon {
+            color: #059669;
+            background: #d1fae5;
+            border-color: #a7f3d0;
+        }
+
+        .stats-grid .stat-card:nth-child(3) .stat-icon {
+            color: #dc2626;
+            background: #fee2e2;
+            border-color: #fecaca;
+        }
+
+        .stats-grid .stat-card:nth-child(4) .stat-icon {
+            color: #d97706;
+            background: #fef3c7;
+            border-color: #fde68a;
+        }
+
+        .stats-grid .stat-card:nth-child(5) .stat-icon {
+            color: #2563eb;
+            background: #dbeafe;
+            border-color: #bfdbfe;
+        }
+
+        .stats-grid .stat-card:nth-child(6) .stat-icon {
+            color: #7c3aed;
+            background: #ede9fe;
+            border-color: #ddd6fe;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card .stat-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            color: #334155;
+            margin-bottom: 2px;
+            line-height: 1.15;
+            word-break: break-word;
+        }
+
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        /* ACTION BAR */
+        .action-bar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 18px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid #d7e3f0;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #1e3a8a, #1e293b);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #243349;
+            border: 1px solid #d6e1ef;
+        }
+
+        .action-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .action-btn-small {
+            padding: 6px 12px !important;
+            font-size: 9px !important;
+        }
+
+        /* FMS CHECKBOXES */
+        .fms-pending-checkbox,
+        .fms-completed-checkbox,
+        .select-all-fms-pending,
+        .select-all-fms-completed {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #10b981;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* SEARCH BAR */
+        .search-wrapper {
+            position: relative;
+            margin-right: auto;
+            min-width: 270px;
+        }
+
+        .search-input {
+            padding: 9px 12px 9px 36px;
+            border-radius: 11px;
+            border: 1px solid #d6e1ef;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* TABLE */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #d7e3f0;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .table-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5edf6;
+            background: linear-gradient(180deg, #f8fbff, #f4f8fd);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            color: #334155;
+        }
+
+        .table-header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .table-header .badge {
+            background: #e8eef6;
+            color: #3f4f63;
+            border: 1px solid #d8e1eb;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 480px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 860px;
+        }
+
+        thead {
+            background: #f8fbff;
+            border-bottom: 1px solid #e5edf6;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fbff;
+            padding: 11px 12px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #5f7086;
+            border-bottom: 1px solid #e5edf6;
+        }
+
+        th:first-child {
+            text-align: center;
+            width: 50px;
+        }
+
+        td {
+            padding: 11px 12px;
+            font-size: 12px;
+            color: #27374d;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            text-align: center;
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fbfdff;
+        }
+
+        tbody tr:hover {
+            background: #eff6ff;
+        }
+
+        tbody tr.selected {
+            background: #ecfdf5;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .task-id {
+            font-weight: 800;
+            color: #54657e;
+            font-size: 11px;
+        }
+
+        .task-title {
+            font-weight: 700;
+            color: #14263f;
+        }
+
+        .task-meta {
+            font-size: 11px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* STATUS BADGE */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border: 1px solid transparent;
+        }
+
+        .status-badge.on-time {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .status-badge.in-progress {
+            background: #e0ecff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.delayed {
+            background: #fff7d6;
+            border-color: #fde68a;
+            color: #a16207;
+        }
+
+        .status-badge.overdue {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+
+        /* ACTION BUTTONS IN TABLE */
+        .table-action-btn {
+            padding: 7px 12px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-action-btn.complete {
+            background: linear-gradient(135deg, #1e3a8a, #1e293b);
+            color: white;
+        }
+
+        .table-action-btn.complete:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e293b);
+        }
+
+        .quick-complete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: #dcfce7;
+            color: #16a34a;
+            border: 1px solid #86efac;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .quick-complete-btn:hover {
+            background: #16a34a;
+            color: white;
+        }
+
+        .table-container.overdue-section {
+            border-top: 4px solid #ef4444;
+        }
+
+        .table-container.completed-section {
+            border-top: 4px solid #10b981;
+        }
+
+        .table-header.overdue-header {
+            background: #fee2e2;
+        }
+
+        .table-header.overdue-header h3 {
+            color: #991b1b;
+        }
+
+        .table-header .badge.overdue-badge {
+            background: #fecaca;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .table-header.completed-header {
+            background: #ecfdf5;
+        }
+
+        .table-header.completed-header h3 {
+            color: #065f46;
+        }
+
+        .table-header .badge.completed-badge {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #6ee7b7;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.2s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            background: #10b981;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-body {
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #10b981;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            padding: 24px 40px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #059669;
+        }
+
+        .modal-btn.secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 240px 0.8fr 1fr;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: none;
+                height: auto;
+            }
+
+            .action-bar {
+                flex-wrap: wrap;
+            }
+
+            .search-wrapper {
+                width: 100%;
+                margin-right: 0;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-shell {
+                flex-direction: column;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .header-left {
+                align-items: flex-start;
+            }
+
+            .page-header h1 {
+                font-size: 15px;
+                white-space: normal;
+            }
+
+            .header-subtitle {
+                white-space: normal;
+            }
+
+            .header-date {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+
+            .action-bar {
+                gap: 10px;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: none;
+            }
+
+            .table-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            th,
+            td {
+                padding: 11px 10px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <th:block th:replace="~{fragments/employee-sidebar :: sidebar}"></th:block>
+
+        <main class="emp-main-content">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" type="button"
+                        aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"
+                            height="24">
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <div class="title-wrap">
+                        <div class="header-kicker">Flow Management System</div>
+                        <h1
+                            th:text="${(employeeName != null ? #strings.toUpperCase(employeeName) + '''S ' : '') + 'FMS FOLDER'}">
+                            EMPLOYEE'S FMS FOLDER</h1>
+                        <div class="header-subtitle">
+                            Active workspace:
+                            <span th:text="${currentFolder != null ? currentFolder.name : 'Folder'}">Folder</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-date">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>Date range</span>
+                    <strong>Today</strong>
+                </div>
+            </div>
+
+            <!-- BREADCRUMB -->
+            <div class="breadcrumb" style="padding: 0 16px;">
+                <a th:href="@{/employee/dashboard}">Dashboard</a>
+                <span>&rsaquo;</span>
+                <span>FMS</span>
+                <span>&rsaquo;</span>
+                <span th:text="${currentFolder != null ? currentFolder.name : 'Folder'}">Folder</span>
+            </div>
+
+            <!-- DASHBOARD KPI GRID -->
+            <div class="dashboard-grid">
+                <!-- CLIENT FILTER -->
+                <div class="client-filter">
+                    <h3 class="section-title"><span class="title-icon">👥</span>Client Filter</h3>
+                    <div th:if="${clientProjectMap != null}" th:each="clientEntry : ${clientProjectMap}">
+                        <label>
+                            <input type="checkbox" checked th:value="${clientEntry.key}">
+                            <span th:text="${clientEntry.key}">Client</span>
+                        </label>
+                    </div>
+                    <div th:if="${clientProjectMap == null or clientProjectMap.isEmpty()}"
+                        style="font-size:11px; color:#94a3b8; margin-top: 6px;">
+                        No clients assigned.
+                    </div>
+                </div>
+
+                <!-- CHART CARD -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h2 class="section-title"><span class="title-icon">📊</span>Task Distribution</h2>
+                        <div class="icon-box">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="taskChart"></canvas>
+                        <div class="chart-center-label">
+                            <div class="label" style="font-size: 8px;">OTC</div>
+                            <div class="value"
+                                th:text="${dashboardStats != null and dashboardStats.get('otcScore') != null ? dashboardStats.get('otcScore') : '0%'}">
+                                85%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS GRID -->
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-top-color: #6366f1;">
+                        <div class="stat-head">
+                            <div class="stat-title">Total Tasks</div>
+                            <span class="stat-icon">📦</span>
+                        </div>
+                        <div class="stat-value"
+                            th:text="${dashboardStats != null and dashboardStats.get('totalTasks') != null ? dashboardStats.get('totalTasks') : 0}">
+                            10</div>
+                    </div>
+                    <div class="stat-card" style="border-top-color: #10b981;">
+                        <div class="stat-head">
+                            <div class="stat-title">On Time</div>
+                            <span class="stat-icon">✅</span>
+                        </div>
+                        <div class="stat-value" style="color:#10b981;"
+                            th:text="${dashboardStats != null and dashboardStats.get('onTime') != null ? dashboardStats.get('onTime') : 0}">
+                            3</div>
+                    </div>
+                    <div class="stat-card" style="border-top-color: #ef4444;">
+                        <div class="stat-head">
+                            <div class="stat-title">Overdue</div>
+                            <span class="stat-icon">⏰</span>
+                        </div>
+                        <div class="stat-value" style="color:#ef4444;"
+                            th:text="${dashboardStats != null and dashboardStats.get('overdue') != null ? dashboardStats.get('overdue') : 0}">
+                            0</div>
+                    </div>
+                    <div class="stat-card" style="border-top-color: #f59e0b;">
+                        <div class="stat-head">
+                            <div class="stat-title">Delayed</div>
+                            <span class="stat-icon">⚠️</span>
+                        </div>
+                        <div class="stat-value" style="color:#f59e0b;"
+                            th:text="${dashboardStats != null and dashboardStats.get('delayed') != null ? dashboardStats.get('delayed') : 0}">
+                            5</div>
+                    </div>
+                    <div class="stat-card" style="border-top-color: #3b82f6;">
+                        <div class="stat-head">
+                            <div class="stat-title">In Progress</div>
+                            <span class="stat-icon">🔄</span>
+                        </div>
+                        <div class="stat-value" style="color:#3b82f6;"
+                            th:text="${dashboardStats != null and dashboardStats.get('inProgress') != null ? dashboardStats.get('inProgress') : 0}">
+                            2</div>
+                    </div>
+                    <div class="stat-card" style="border-top-color: #8b5cf6;">
+                        <div class="stat-head">
+                            <div class="stat-title">ATS Score</div>
+                            <span class="stat-icon">🎯</span>
+                        </div>
+                        <div class="stat-value" style="color:#8b5cf6;"
+                            th:text="${dashboardStats != null and dashboardStats.get('atsScore') != null ? dashboardStats.get('atsScore') : '-'}">
+                            92%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BAR -->
+            <div class="action-bar">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search tasks...">
+                </div>
+                <!-- <button class="action-btn secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Filter
+                </button> -->
+            </div>
+
+            <!-- FMS PENDING TASKS BY PROCESS STEP -->
+            <th:block th:if="${currentFolder != null and currentFolder.processDetails != null}">
+                <div class="table-container" th:each="step,iter : ${currentFolder.processDetails}"
+                    th:if="${step.responsiblePerson != null and (#authentication.name == 'admin' or #authentication.name == 'superadmin' or #strings.toLowerCase(step.responsiblePerson) == #strings.toLowerCase(#authentication.name))}">
+                    <div class="table-header">
+                        <h3 th:text="${'STEP ' + (iter.index + 1) + ': ' + step.stepProcess}">STEP 1: Process</h3>
+                        <div class="table-header-actions">
+                            <span class="badge"
+                                th:text="${(fmsPendingTasksByStep != null and fmsPendingTasksByStep[step.stepProcess] != null ? #lists.size(fmsPendingTasksByStep[step.stepProcess]) : 0) + ' Records'}">0
+                                Records</span>
+                            <button class="action-btn primary action-btn-small" onclick="submitBulkCompletion()"
+                                style="margin-right: 8px; background: #10b981;">
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Company Name</th>
+                                    <th>Task</th>
+                                    <th>Target Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Mark as Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    th:each="task : ${fmsPendingTasksByStep != null ? fmsPendingTasksByStep[step.stepProcess] : null}">
+                                    <td class="task-id" th:text="${task.orderId}">ORD-001</td>
+                                    <td th:text="${task.customerName}">Customer</td>
+                                    <td class="task-title" th:text="${task.taskName}">Task</td>
+                                    <td style="color: #64748b; font-weight: 700;" th:text="${task.targetDate}">
+                                        2026-01-01</td>
+                                    <td class="text-center">
+                                        <span class="status-badge"
+                                            th:classappend="${#strings.toLowerCase(task.status) == 'completed' ? 'completed' : #strings.toLowerCase(task.status) == 'in progress' ? 'in-progress' : #strings.toLowerCase(task.status) == 'overdue' ? 'overdue' : #strings.toLowerCase(task.status) == 'delayed' ? 'delayed' : 'on-time'}"
+                                            th:text="${task.status}">On Time</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="fms-pending-checkbox" th:value="${task.planningEntryId + ':' + task.taskName}">
+                                    </td>
+                                </tr>
+                                <tr
+                                    th:if="${fmsPendingTasksByStep == null or fmsPendingTasksByStep[step.stepProcess] == null or fmsPendingTasksByStep[step.stepProcess].isEmpty()}">
+                                    <td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">No tasks
+                                        found for this step.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </th:block>
+
+            <!-- FMS COMPLETED TASKS -->
+            <div class="table-container completed-section">
+                <div class="table-header completed-header">
+                    <h3>Completed FMS Tasks</h3>
+                    <div class="table-header-actions">
+                        <span class="badge completed-badge"
+                            th:text="${(fmsCompletedTasks != null ? fmsCompletedTasks.size() : 0) + ' Records'}">0
+                            Records</span>
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Order ID</th>
+                                <th>Company Name</th>
+                                <th>Task</th>
+                                <th>Resp. Person</th>
+                                <th>Target Date</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="task : ${fmsCompletedTasks}">
+                                <td class="text-center" th:text="${task.sr}">1</td>
+                                <td class="task-id" th:text="${task.orderId}">ORD-001</td>
+                                <td th:text="${task.customerName}">Customer</td>
+                                <td class="task-title" th:text="${task.taskName}">Step Name</td>
+                                <td th:text="${task.responsiblePerson}">User</td>
+                                <td th:text="${task.targetDate}">2024-01-01</td>
+                                <td class="text-center">
+                                    <span class="status-badge"
+                                        th:classappend="${#strings.toLowerCase(task.status) == 'delayed' ? 'delayed' : 'completed'}"
+                                        th:text="${task.status}">Completed</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${fmsCompletedTasks == null or fmsCompletedTasks.isEmpty()}">
+                                <td colspan="7" class="text-center" style="padding: 20px; color: #94a3b8;">No completed
+                                    tasks found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- COMPLETE TASK MODAL -->
+    <div class="modal-overlay" id="completeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <polyline points="9 15 11 17 15 13"></polyline>
+                    </svg>
+                    Submit Completion Report
+                </h2>
+                <button class="modal-close" onclick="closeCompleteModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="completeForm">
+                    <div class="form-group">
+                        <label class="form-label">Task ID</label>
+                        <input type="text" class="form-control" id="completeTaskId" placeholder="Enter Task ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Remarks / Work Description</label>
+                        <textarea class="form-control" id="completeRemarks" rows="4"
+                            placeholder="Describe what was delivered..." required></textarea>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Upload Proof (Optional)</label>
+                        <input type="file" class="form-control" id="completeFile" accept=".pdf">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeCompleteModal()">Cancel</button>
+                <button type="submit" form="completeForm" class="modal-btn primary">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN TASK MODAL -->
+    <div class="modal-overlay" id="assignModal">
+        <div class="modal">
+            <div class="modal-header" style="background: #1e293b;">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Assign New Task
+                </h2>
+                <button class="modal-close" onclick="closeAssignModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="assignForm">
+                    <div class="form-group">
+                        <label class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="assignTaskName" placeholder="Enter task name..."
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Client</label>
+                        <input type="text" class="form-control" id="assignClient" placeholder="Enter Client Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project</label>
+                        <input type="text" class="form-control" id="assignProject" placeholder="Enter Project Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assigned To</label>
+                        <select class="form-control" id="assignUser" required>
+                            <option value="">Select Team Member</option>
+                            <option th:each="emp : ${allEmployees}" th:value="${emp.name}" th:text="${emp.name}">
+                                Employee
+                                Name</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date</label>
+                        <input type="date" class="form-control" id="assignDate" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Attachment (Optional)</label>
+                        <input type="file" class="form-control" id="assignFile">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeAssignModal()">Cancel</button>
+                <button type="submit" form="assignForm" class="modal-btn primary"
+                    style="background: #1e293b;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const dashboardStats = /*[[${dashboardStats}]]*/ {};
+        const userName = /*[[${employeeName}]]*/ 'Employee';
+        /*]]>*/
+
+        // INITIALIZE
+        document.addEventListener('DOMContentLoaded', function () {
+            initChart();
+            handleUrlParams();
+
+            // Setup Form Listeners
+            const assignForm = document.getElementById('assignForm');
+            if (assignForm) {
+                assignForm.addEventListener('submit', handleAssignSubmit);
+            }
+
+            const completeForm = document.getElementById('completeForm');
+            if (completeForm) {
+                completeForm.addEventListener('submit', handleCompleteSubmit);
+            }
+
+            // Wire FMS tick buttons via event delegation
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.fms-complete-btn');
+                if (!btn) return;
+                const planningEntryId = btn.dataset.planningId;
+                const stepName = btn.dataset.stepName;
+                if (planningEntryId && stepName) {
+                    completeFmsStep(btn, planningEntryId, stepName);
+                }
+            });
+        });
+
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('status');
+            const section = params.get('section');
+
+            if (section === 'completed') {
+                const el = document.querySelector('.table-container:nth-of-type(2)'); // Completed table container
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            if (status) {
+                // Filter My Tasks Table
+                const rows = document.querySelectorAll('#myTasksBody tr');
+                let found = false;
+                rows.forEach(row => {
+                    const badge = row.querySelector('.status-badge');
+                    if (badge) {
+                        const text = badge.textContent.trim().toLowerCase();
+                        // Loose matching
+                        if (!text.includes(status.toLowerCase())) {
+                            row.style.display = 'none';
+                        } else {
+                            found = true;
+                        }
+                    }
+                });
+
+                // Scroll to My Tasks if we are filtering it
+                const el = document.querySelector('.table-container');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // CHART.JS INITIALIZATION
+        function initChart() {
+            let data = dashboardStats && dashboardStats.chart_data ? dashboardStats.chart_data : [];
+            let otcScore = dashboardStats && dashboardStats.otc_score ? dashboardStats.otc_score : '0%';
+
+            // Check if data is empty or all values are 0
+            const hasData = data.length > 0 && data.some(d => d.value > 0);
+
+            // Update OTC label
+            const valueEl = document.querySelector('.chart-center-label .value');
+
+            if (!hasData) {
+                // Show empty ring — no fake data
+                data = [{ name: 'No Data', value: 1, color: '#e2e8f0' }];
+                if (valueEl) valueEl.textContent = otcScore;
+            } else {
+                if (valueEl) valueEl.textContent = otcScore;
+            }
+
+            const labels = data.map(d => d.name);
+            const values = data.map(d => d.value);
+            const colors = data.map(d => d.color);
+
+            const ctx = document.getElementById('taskChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', // Thinner ring like functionality
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function handleCompleteSubmit(e) {
+            e.preventDefault();
+
+            const taskId = (document.getElementById('completeTaskId')?.value || '').trim();
+            const remarks = (document.getElementById('completeRemarks')?.value || '').trim();
+
+            if (!taskId) {
+                alert('Please enter Task ID.');
+                return;
+            }
+
+            if (!remarks) {
+                alert('Please add remarks before submitting.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/employee/task-manager/api/tasks/${encodeURIComponent(taskId)}/complete`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ remarks })
+                });
+
+                if (response.ok) {
+                    alert('Task marked as completed.');
+                    closeCompleteModal();
+                    window.location.reload();
+                } else {
+                    const error = await response.json().catch(() => ({}));
+                    alert(error.error || 'Could not complete task. Check Task ID and try again.');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to complete task.');
+            }
+        }
+
+        // Mark FMS process step as Completed when tick button is clicked
+        async function completeFmsStep(btn, planningEntryId, stepName) {
+            if (!confirm(`Mark "${stepName}" as Completed?`)) return;
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+
+            try {
+                const params = new URLSearchParams({ planningEntryId, stepName });
+                const response = await fetch(`/employee/fms/api/complete-step?${params}`, {
+                    method: 'PATCH'
+                });
+                if (response.ok) {
+                    btn.style.background = '#16a34a';
+                    btn.style.color = '#fff';
+                    btn.style.opacity = '1';
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    alert(err.error || 'Failed to complete step.');
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            } catch (e) {
+                alert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+
+        // MODAL FUNCTIONS
+        function openCompleteModal(taskId = '') {
+            const idField = document.getElementById('completeTaskId');
+            if (idField && taskId) {
+                idField.value = taskId;
+            }
+            document.getElementById('completeModal').classList.add('show');
+        }
+
+        function closeCompleteModal() {
+            document.getElementById('completeModal').classList.remove('show');
+        }
+
+        function openAssignModal(forSelf = false) {
+            document.getElementById('assignModal').classList.add('show');
+            if (forSelf && typeof userName !== 'undefined') {
+                const select = document.getElementById('assignUser');
+                // Select option by text (name)
+                // Since values are names now, we can set the value directly
+                select.value = userName;
+
+                // If direct value assignment fails (e.g. case sensitivity), try finding option
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text.toLowerCase() === userName.toLowerCase()) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('show');
+        }
+
+        // HANDLE ASSIGN SUBMIT
+        async function handleAssignSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('assignTaskName').value);
+            formData.append('clientName', document.getElementById('assignClient').value);
+            formData.append('projectName', document.getElementById('assignProject').value);
+            formData.append('assignedToName', document.getElementById('assignUser').value); // Send Name as ID/Name
+            formData.append('targetDate', document.getElementById('assignDate').value);
+
+            const fileInput = document.getElementById('assignFile');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/employee/task-manager/api/tasks', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Task assigned successfully!');
+                    closeAssignModal();
+                    // Reload page to show new task (or fetch via AJAX)
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error assigning task: ' + (error.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to assign task.');
+            }
+        }
+
+        // SELECT ALL CHECKBOXES FOR FMS PENDING TASKS
+        function selectAllFmsPending(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.fms-pending-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        // SELECT ALL CHECKBOXES FOR FMS COMPLETED TASKS
+        function selectAllFmsCompleted(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.fms-completed-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        // SUBMIT BULK COMPLETION
+        function submitBulkCompletion() {
+            // Get checked boxes from FMS pending section
+            const fmsPendingChecked = document.querySelectorAll('.fms-pending-checkbox:checked');
+
+            if (fmsPendingChecked.length === 0) {
+                alert('Please select at least one task to mark as completed.');
+                return;
+            }
+
+            const selectedTasks = [];
+            
+            // Get FMS pending task values
+            fmsPendingChecked.forEach(checkbox => {
+                const value = checkbox.value; // format: planningId:stepName
+                if (value) {
+                    const [planningId, stepName] = value.split(':');
+                    selectedTasks.push({ planningId, stepName });
+                }
+            });
+
+            console.log('Sending tasks to backend:', selectedTasks);
+
+            // Send to backend
+            fetch('/employee/fms/bulk-complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(selectedTasks)
+            })
+            .then(async response => {
+                console.log('Response status:', response.status);
+                const rawText = await response.text();
+                let data = null;
+                try {
+                    data = rawText ? JSON.parse(rawText) : null;
+                } catch (e) {
+                    if (!response.ok) {
+                        throw new Error('Server returned status ' + response.status);
+                    }
+                    throw new Error('Invalid server response');
+                }
+
+                if (!response.ok) {
+                    const serverMessage = data && data.message ? data.message : ('Server returned status ' + response.status);
+                    throw new Error(serverMessage);
+                }
+
+                return data;
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data && data.success) {
+                    alert('Success! ' + data.updatedCount + ' task(s) marked as completed.');
+                    // Clear checkboxes
+                    document.querySelectorAll('.fms-pending-checkbox:checked').forEach(cb => cb.checked = false);
+                    // Refresh the page to see updated statuses
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    const errorMsg = (data && data.message) ? data.message : 'Unknown error';
+                    alert('Error: ' + errorMsg);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('Failed to submit tasks: ' + error.message);
+            });
+        }
+
+        // CLOSE MODAL ON OUTSIDE CLICK
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

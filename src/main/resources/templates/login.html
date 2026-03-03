@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Login | Flow Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #0f172a;
+            --accent: #06b6d4;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            background: var(--surface);
+        }
+
+        /* LEFT SIDE - BRANDING */
+        .brand-section {
+            flex: 1.2;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Animated Background Elements */
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .brand-section::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 25s infinite ease-in-out reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 30px);
+            }
+        }
+
+        .glass-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(40px);
+            z-index: 1;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+        }
+
+        /* BRAND HEADER & LOGOS */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 60px;
+            perspective: 1000px;
+            /* For 3D effect */
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            animation: floatLogo 6s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Continuous Float Animation */
+        @keyframes floatLogo {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(1deg);
+            }
+        }
+
+        /* Shimmer Effect */
+        .logo-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: skewX(-25deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+
+            20% {
+                left: 200%;
+            }
+
+            100% {
+                left: 200%;
+            }
+        }
+
+        .logo-container:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 30px 60px rgba(59, 130, 246, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .logo-img {
+            height: 48px;
+            width: auto;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.1);
+        }
+
+        .brand-text-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #93c5fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-tagline {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero-text h1 {
+            font-size: 56px;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-width: 480px;
+        }
+
+        .trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            margin-top: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* RIGHT SIDE - LOGIN FORM */
+        .login-section {
+            flex: 1;
+            position: relative;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            padding: 40px 0;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        /* FORM STYLES */
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 48px;
+            /* Symmetric padding for icons on left and right */
+            background: #f8fafc;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 15px;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:hover {
+            background: #f1f5f9;
+        }
+
+        .form-input:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 18px;
+            transition: color 0.2s;
+            pointer-events: none;
+            /* Ensure clicks go through if overlapping */
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        .form-input:focus+.input-icon {
+            color: var(--primary);
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"]:checked+.custom-checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        .forgot-link {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: var(--primary-dark);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .submit-btn:hover::after {
+            left: 100%;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: var(--error);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #fecaca;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer-text a {
+            color: var(--text-main);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 968px) {
+            .brand-section {
+                display: none;
+            }
+
+            .login-section {
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            }
+
+            .login-container {
+                background: white;
+                padding: 40px;
+                border-radius: 24px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 3D Tilt Effect
+            const container = document.querySelector('.logo-container');
+            if (container) {
+                container.addEventListener('mousemove', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -15;
+                    const rotateY = ((x - centerX) / centerX) * 15;
+
+                    container.style.transition = 'none';
+                    container.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.1)`;
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    container.style.transition = 'transform 0.5s ease';
+                    container.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                });
+            }
+
+            // Password Toggle logic
+            const toggleBtn = document.querySelector('.password-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    const passwordInput = document.getElementById('password');
+                    const icon = this.querySelector('i');
+
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+
+    <!-- LEFT SIDE: BRANDING -->
+    <div class="brand-section">
+        <div class="glass-overlay"></div>
+        <div class="brand-content">
+            <div class="brand-header">
+                <div class="logo-container">
+                    <img class="logo-img" src="/img/FLM7.jpeg" alt="Here Quality Excellence">
+                    <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.2);"></div>
+                    <img class="logo-img" src="/img/FMS8.jpeg" alt="25 Years Excellence">
+                </div>
+                <div class="brand-text-group">
+                    <div class="brand-name">Here Quality Excellence</div>
+                    <div class="brand-tagline">25+ Years of Service</div>
+                </div>
+            </div>
+
+            <div class="hero-text">
+                <h1>Scale Your Business <br>With <span style="color: #60a5fa;">Intelligence</span></h1>
+                <p>Unlock corporate excellence with our advanced Form Management System. Streamline operations, reduce
+                    costs, and double your efficiency.</p>
+
+                <div class="trust-badge">
+                    <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                    <span>Trusted by <b>500+ Enterprises</b> worldwide</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="position: relative; z-index: 2; font-size: 12px; opacity: 0.6;">
+            &copy; 2026 Here Quality Excellence. All rights reserved.
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: LOGIN FORM -->
+    <div class="login-section">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>Welcome back</h2>
+                <p>Please enter your credentials to access your dashboard.</p>
+            </div>
+
+            <!-- Error Message -->
+            <div th:if="${param.error}" class="error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>Invalid username or password. Please try again.</span>
+            </div>
+
+            <div th:if="${param.logout}" class="error-message"
+                style="background: #f0fdf4; border-color: #bbf7d0; color: #15803d;">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>You have been logged out successfully.</span>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="username">Email or Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" class="form-input"
+                            placeholder="name@company.com" required autofocus>
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="••••••••"
+                            value="1234567" required>
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <div class="password-toggle">
+                            <i class="fa-regular fa-eye"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="remember-me">
+                        <span class="custom-checkbox">
+                            <i class="fa-solid fa-check" style="font-size: 12px;"></i>
+                        </span>
+                        <span style="font-size: 14px; color: var(--text-muted); font-weight: 500;">Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Sign In to Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+                </button>
+            </form>
+
+            <div class="footer-text">
+                Don't have an account? <a href="#">Contact Admin</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

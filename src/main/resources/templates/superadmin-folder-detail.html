@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${folder.name} + ' - Flow Details'">Flow Details</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1A56DB;
+            --primary-hover: #1648B8;
+            --navy: #1f3c88;
+            --navy-deep: #152d6c;
+            --bg: #F0F4FA;
+            --card: #ffffff;
+            --text: #1E293B;
+            --muted: #64748B;
+            --line: #E2E8F0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, .06);
+            --shadow-md: 0 4px 14px rgba(0, 0, 0, .08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, .12);
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ── Header ── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            color: var(--text);
+            text-decoration: none;
+            transition: all .2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .breadcrumbs a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumbs .sep {
+            color: #CBD5E1;
+        }
+
+        .breadcrumbs .current {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #F59E0B, #F97316);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ── Flow header card ── */
+        .flow-header {
+            background: linear-gradient(120deg, var(--navy), #2847a7 55%, #1b66b0);
+            color: #fff;
+            padding: 24px 28px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flow-header::after {
+            content: '';
+            position: absolute;
+            right: -60px;
+            top: -70px;
+            width: 180px;
+            height: 180px;
+            background: rgba(255, 255, 255, .06);
+            border-radius: 50%;
+        }
+
+        .flow-header h1 {
+            font-family: "Sora", sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .flow-header p {
+            font-size: 0.85rem;
+            opacity: .8;
+            margin-top: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Two-column grid ── */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            animation: fadeUp .4s ease both;
+        }
+
+        .detail-card {
+            background: var(--card);
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: all .25s;
+        }
+
+        .detail-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .detail-card-header {
+            padding: 16px 20px;
+            font-family: "Sora", sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--navy);
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-card-header svg {
+            color: var(--primary);
+        }
+
+        /* ── Tables ── */
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .detail-table thead {
+            background: linear-gradient(135deg, var(--navy), var(--navy-deep));
+        }
+
+        .detail-table th {
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .detail-table td {
+            padding: 12px 16px;
+            font-size: 0.88rem;
+            color: var(--text);
+            border-bottom: 1px solid var(--line);
+            vertical-align: middle;
+        }
+
+        .detail-table tbody tr:nth-child(even) {
+            background: #F8FAFC;
+        }
+
+        .detail-table tbody tr:hover {
+            background: #EFF6FF;
+        }
+
+        .detail-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sno {
+            font-weight: 700;
+            color: var(--primary);
+            width: 50px;
+            text-align: center;
+        }
+
+        .empty-cell {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Edit Mode ── */
+        .edit-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .edit-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 86, 219, .1);
+        }
+
+        .edit-select {
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+            background: #fff;
+        }
+
+        .edit-select:focus {
+            border-color: var(--primary);
+        }
+
+        .add-row-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, .3);
+            transition: all .2s;
+        }
+
+        .add-row-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .remove-row-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: #FEE2E2;
+            color: var(--danger);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .remove-row-btn:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .card-top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px 0;
+            margin-top: -4px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+        }
+
+        .btn-save {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(34, 197, 94, .3);
+            transition: all .2s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(34, 197, 94, .35);
+        }
+
+        .btn-cancel {
+            padding: 12px 28px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-cancel:hover {
+            background: #F8FAFC;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(15, 27, 45, .55);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+            animation: modalIn .25s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-box h3 {
+            font-family: "Sora", sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .modal-box p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--line);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, .12);
+        }
+
+        .modal-input.error {
+            border-color: #EF4444;
+        }
+
+        .modal-error {
+            color: #EF4444;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .modal-error.show {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-cancel {
+            padding: 10px 20px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .modal-cancel:hover {
+            background: #F8FAFC;
+        }
+
+        .modal-confirm {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #F59E0B, #F97316);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .modal-confirm:hover {
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            transform: translateY(-1px);
+        }
+
+        .modal-confirm:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .lock-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #FEF3C7;
+            color: #F59E0B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .edit-mode-banner {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border: 1px solid #FCD34D;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #92400E;
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                padding: 16px 12px;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-header h1 {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #fff;
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav-brand {
+            font-family: "Sora", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            margin-left: 40px;
+        }
+
+        .nav-item {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            padding: 4px 0;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 1px solid var(--line);
+            transition: all 0.2s;
+            background: #fff;
+            cursor: default;
+        }
+
+        .nav-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #EFF6FF;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .nav-user {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .nav-logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: var(--muted);
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .nav-logout:hover {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div style="display:flex;align-items:center;">
+            <a href="/superadmin/dashboard" class="nav-brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                HereQuality
+            </a>
+            <div class="nav-links">
+                <a href="/superadmin/dashboard" class="nav-item">Dashboard</a>
+                <a href="/superadmin/company-manage" class="nav-item active">Companies</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-profile">
+                <div class="nav-avatar">SA</div>
+                <span class="nav-user">Super Admin</span>
+            </div>
+            <a href="/logout" class="nav-logout" title="Logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </nav>
+    <div class="shell">
+        <!-- Top bar -->
+        <div class="top-bar">
+            <div class="top-left">
+                <a th:href="'/superadmin/company-detail/' + ${adminId}" class="back-btn" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </a>
+                <div class="breadcrumbs">
+                    <a href="/superadmin/company-manage">Companies</a>
+                    <span class="sep">›</span>
+                    <a th:href="'/superadmin/company-detail/' + ${adminId}"
+                        th:text="${admin.companyName != null ? admin.companyName : admin.username}">Company</a>
+                    <span class="sep">›</span>
+                    <span class="current" th:text="${folder.name}">Flow</span>
+                </div>
+            </div>
+            <button th:if="${!editMode}" class="edit-btn" onclick="openPasswordModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit
+            </button>
+        </div>
+
+        <!-- Flow header -->
+        <div class="flow-header">
+            <h1 th:text="${folder.name}">Flow Name</h1>
+            <p th:text="'Managed by ' + (${admin.companyName != null ? admin.companyName : admin.username})">Managed by
+                Company</p>
+        </div>
+
+        <!-- Edit mode banner -->
+        <div th:if="${editMode}" class="edit-mode-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit Mode — Make your changes below then click Save
+        </div>
+
+        <!-- =================== VIEW MODE =================== -->
+        <div th:if="${!editMode}" class="detail-grid">
+            <!-- Order Details Card -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Order Details
+                </div>
+                <div th:if="${folder.orderDetails != null and !#lists.isEmpty(folder.orderDetails)}">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th class="sno">SR</th>
+                                <th>ORDER DETAILS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="detail, iter : ${folder.orderDetails}">
+                                <td class="sno" th:text="${iter.index + 1}">1</td>
+                                <td th:text="${detail}">Detail</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${folder.orderDetails == null or #lists.isEmpty(folder.orderDetails)}" class="empty-cell">
+                    No order details configured yet.
+                </div>
+            </div>
+
+            <!-- Process Details Card -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    Process Details
+                </div>
+                <div th:if="${folder.processDetails != null and !#lists.isEmpty(folder.processDetails)}">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th class="sno">S.NO</th>
+                                <th>STEP / PROCESS</th>
+                                <th>RESPONSIBLE PERSON</th>
+                                <th>TARGET TYPE</th>
+                                <th>DAYS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="step, iter : ${folder.processDetails}">
+                                <td class="sno" th:text="${iter.index + 1}">1</td>
+                                <td th:text="${step.stepProcess}">Step</td>
+                                <td th:text="${step.responsiblePerson}">Person</td>
+                                <td th:text="${step.targetType}">Manual</td>
+                                <td th:text="${step.days}">5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${folder.processDetails == null or #lists.isEmpty(folder.processDetails)}"
+                    class="empty-cell">
+                    No process steps configured yet.
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== EDIT MODE =================== -->
+        <form th:if="${editMode}" method="post"
+            th:action="'/superadmin/company-detail/' + ${adminId} + '/folder/' + ${folderId} + '/save'"
+            onsubmit="return confirmSave()">
+
+            <div class="detail-grid">
+                <!-- Order Details Edit Card -->
+                <div class="detail-card">
+                    <div class="detail-card-header" style="justify-content: space-between;">
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            Order Details
+                        </span>
+                        <button type="button" class="add-row-btn" onclick="addOrderRow()" title="Add row">+</button>
+                    </div>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th class="sno">SR</th>
+                                <th>ORDER DETAILS</th>
+                                <th style="width:50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderBody">
+                            <tr th:if="${folder.orderDetails != null}" th:each="detail, iter : ${folder.orderDetails}">
+                                <td class="sno" th:text="${iter.index + 1}">1</td>
+                                <td>
+                                    <input type="text" name="orderDetails" th:value="${detail}" class="edit-input"
+                                        placeholder="Order detail">
+                                </td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="remove-row-btn" onclick="removeRow(this)"
+                                        title="Remove">✕</button>
+                                </td>
+                            </tr>
+                            <tr th:if="${folder.orderDetails == null or #lists.isEmpty(folder.orderDetails)}">
+                                <td class="sno">1</td>
+                                <td>
+                                    <input type="text" name="orderDetails" class="edit-input"
+                                        placeholder="Order detail">
+                                </td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="remove-row-btn" onclick="removeRow(this)"
+                                        title="Remove">✕</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Process Details Edit Card -->
+                <div class="detail-card">
+                    <div class="detail-card-header" style="justify-content: space-between;">
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            Process Details
+                        </span>
+                        <button type="button" class="add-row-btn" onclick="addProcessRow()" title="Add row">+</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th class="sno">S.NO</th>
+                                    <th>STEP / PROCESS</th>
+                                    <th>RESPONSIBLE PERSON</th>
+                                    <th>TARGET TYPE</th>
+                                    <th>DAYS</th>
+                                    <th style="width:50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="processBody">
+                                <tr th:if="${folder.processDetails != null}"
+                                    th:each="step, iter : ${folder.processDetails}">
+                                    <td class="sno" th:text="${iter.index + 1}">1</td>
+                                    <td>
+                                        <input type="text" name="stepProcess" th:value="${step.stepProcess}"
+                                            class="edit-input" placeholder="Process name">
+                                    </td>
+                                    <td>
+                                        <select name="responsiblePerson" class="edit-select">
+                                            <option value="">Select</option>
+                                            <option th:each="emp : ${employees}" th:value="${emp.name}"
+                                                th:text="${emp.name}"
+                                                th:selected="${emp.name == step.responsiblePerson}">Employee
+                                            </option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="targetType" class="edit-select" onchange="handleTargetType(this)">
+                                            <option value="">Select</option>
+                                            <option value="Automatic" th:selected="${step.targetType == 'Automatic'}">
+                                                Automatic</option>
+                                            <option value="Manual" th:selected="${step.targetType == 'Manual'}">Manual
+                                            </option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="days" th:value="${step.days}" class="edit-input"
+                                            placeholder="Days" style="width:70px;"
+                                            th:readonly="${step.targetType != 'Automatic'}">
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <button type="button" class="remove-row-btn" onclick="removeRow(this)"
+                                            title="Remove">✕</button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${folder.processDetails == null or #lists.isEmpty(folder.processDetails)}">
+                                    <td class="sno">1</td>
+                                    <td><input type="text" name="stepProcess" class="edit-input"
+                                            placeholder="Process name"></td>
+                                    <td>
+                                        <select name="responsiblePerson" class="edit-select">
+                                            <option value="">Select</option>
+                                            <option th:each="emp : ${employees}" th:value="${emp.name}"
+                                                th:text="${emp.name}">Employee</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="targetType" class="edit-select" onchange="handleTargetType(this)">
+                                            <option value="">Select</option>
+                                            <option value="Automatic">Automatic</option>
+                                            <option value="Manual">Manual</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" name="days" class="edit-input" placeholder="Days"
+                                            style="width:70px;" readonly></td>
+                                    <td style="text-align:center;">
+                                        <button type="button" class="remove-row-btn" onclick="removeRow(this)"
+                                            title="Remove">✕</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save / Cancel -->
+            <div class="form-actions">
+                <a th:href="'/superadmin/company-detail/' + ${adminId} + '/folder/' + ${folderId}"
+                    class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;vertical-align:middle;">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Password Modal (only shown in view mode) -->
+    <div th:if="${!editMode}" class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <div class="lock-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h3>Authentication Required</h3>
+            <p>Enter your super admin password to access edit mode.</p>
+            <input type="password" class="modal-input" id="modalPassword" placeholder="Enter password"
+                autocomplete="off">
+            <div class="modal-error" id="modalError">Incorrect password. Please try again.</div>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="closePasswordModal()">Cancel</button>
+                <button class="modal-confirm" id="modalConfirmBtn" onclick="verifyPassword()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:if="${!editMode}">
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('modalPassword').value = '';
+            document.getElementById('modalPassword').classList.remove('error');
+            document.getElementById('modalError').classList.remove('show');
+            setTimeout(() => document.getElementById('modalPassword').focus(), 100);
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+        }
+
+        document.getElementById('modalPassword').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') verifyPassword();
+            if (e.key === 'Escape') closePasswordModal();
+        });
+
+        document.getElementById('passwordModal').addEventListener('click', function (e) {
+            if (e.target === this) closePasswordModal();
+        });
+
+        async function verifyPassword() {
+            const pwd = document.getElementById('modalPassword').value;
+            const btn = document.getElementById('modalConfirmBtn');
+            const input = document.getElementById('modalPassword');
+            const error = document.getElementById('modalError');
+
+            if (!pwd.trim()) {
+                input.classList.add('error');
+                error.textContent = 'Please enter a password.';
+                error.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                const res = await fetch('/superadmin/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await res.json();
+                if (data.valid) {
+                    // Stay on superadmin page — just add ?edit=true
+                    window.location.href = window.location.pathname + '?edit=true';
+                } else {
+                    input.classList.add('error');
+                    error.textContent = 'Incorrect password. Please try again.';
+                    error.classList.add('show');
+                    input.value = '';
+                    input.focus();
+                }
+            } catch (err) {
+                error.textContent = 'Something went wrong. Try again.';
+                error.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm';
+            }
+        }
+    </script>
+
+    <script th:if="${editMode}">
+        // Hidden employee options template for dynamic rows
+        const employeeOptions = document.querySelector('#processBody select[name="responsiblePerson"]')?.innerHTML || '<option value="">Select</option>';
+
+        function addOrderRow() {
+            const tbody = document.getElementById('orderBody');
+            const count = tbody.rows.length + 1;
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="sno">${count}</td>
+                <td><input type="text" name="orderDetails" class="edit-input" placeholder="Order detail"></td>
+                <td style="text-align:center;"><button type="button" class="remove-row-btn" onclick="removeRow(this)" title="Remove">✕</button></td>
+            `;
+        }
+
+        function addProcessRow() {
+            const tbody = document.getElementById('processBody');
+            const count = tbody.rows.length + 1;
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="sno">${count}</td>
+                <td><input type="text" name="stepProcess" class="edit-input" placeholder="Process name"></td>
+                <td><select name="responsiblePerson" class="edit-select">${employeeOptions}</select></td>
+                <td>
+                    <select name="targetType" class="edit-select" onchange="handleTargetType(this)">
+                        <option value="">Select</option>
+                        <option value="Automatic">Automatic</option>
+                        <option value="Manual">Manual</option>
+                    </select>
+                </td>
+                <td><input type="number" name="days" class="edit-input" placeholder="Days" style="width:70px;" readonly></td>
+                <td style="text-align:center;"><button type="button" class="remove-row-btn" onclick="removeRow(this)" title="Remove">✕</button></td>
+            `;
+        }
+
+        function removeRow(btn) {
+            const row = btn.closest('tr');
+            const tbody = row.parentElement;
+            row.remove();
+            renumberRows(tbody);
+        }
+
+        function renumberRows(tbody) {
+            Array.from(tbody.rows).forEach((row, i) => {
+                row.cells[0].textContent = i + 1;
+            });
+        }
+
+        function handleTargetType(select) {
+            const row = select.closest('tr');
+            const days = row.querySelector('input[name="days"]');
+            if (select.value === 'Automatic') {
+                days.readOnly = false;
+            } else {
+                days.readOnly = true;
+                days.value = '';
+            }
+        }
+
+        function confirmSave() {
+            return confirm('Save all changes?');
+        }
+    </script>
+</body>
+
+</html>

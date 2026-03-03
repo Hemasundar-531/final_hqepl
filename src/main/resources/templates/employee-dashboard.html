@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title>Employee Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-deep: #1d4ed8;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            color: var(--ink);
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        /* Top Header Bar */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--bg);
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-menu-btn svg {
+            width: 20px;
+            height: 20px;
+            color: var(--ink);
+        }
+
+        .page-title h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .page-title p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-info .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--ink);
+        }
+
+        .user-info .role {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .content {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: var(--radius);
+            padding: 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .welcome-banner h2 {
+            margin: 0 0 8px;
+            font-size: 24px;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .welcome-banner p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        /* KPI Cards */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-info h3 {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-info p {
+            margin: 8px 0 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .kpi-icon svg {
+            width: 24px;
+            height: 24px;
+            color: #fff;
+        }
+
+        .kpi-icon.blue {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .kpi-icon.yellow {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .kpi-icon.green {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .kpi-icon.red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Panel */
+        .panel {
+            background: var(--panel);
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        /* Permission Info */
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .permission-card {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--line);
+        }
+
+        .permission-card.enabled {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .permission-card.disabled {
+            opacity: 0.6;
+        }
+
+        .permission-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .permission-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .permission-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .permission-icon.blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .permission-icon.purple {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+
+        .permission-icon.green {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .permission-card h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .permission-card p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .permission-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .permission-status.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .permission-status.inactive {
+            background: rgba(100, 116, 139, 0.1);
+            color: #64748b;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--ink);
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .action-btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .action-btn-icon svg {
+            width: 20px;
+            height: 20px;
+            color: #fff;
+        }
+
+        .action-btn-text h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .action-btn-text p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 16px;
+            }
+
+            .welcome-banner {
+                padding: 24px;
+            }
+
+            .welcome-banner h2 {
+                font-size: 20px;
+            }
+
+            .topbar-right .user-info {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Include Sidebar Fragment -->
+    <th:block th:replace="~{fragments/employee-sidebar :: sidebar}"></th:block>
+
+    <!-- Main Content Area -->
+    <main class="emp-main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
+                <div class="page-title">
+                    <h1>Employee Dashboard</h1>
+                    <p>Welcome back! Here's your overview.</p>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="user-info">
+                    <div class="name" th:text="${employeeName}">Employee Name</div>
+                    <div class="role">Employee</div>
+                </div>
+                <div class="user-avatar-small"
+                    th:text="${employeeName != null and employeeName.length() > 0 ? #strings.toUpperCase(#strings.substring(employeeName, 0, 1)) : 'E'}">
+                    V</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <h2 th:text="'Hello, ' + ${employeeName} + '!'">Hello, Employee!</h2>
+                <p>Access your assigned modules from the sidebar menu. Your permissions determine which features are
+                    available.</p>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpis">
+                <a th:href="@{/employee/task-manager}" class="kpi" style="text-decoration: none; color: inherit;">
+                    <div class="kpi-info">
+                        <h3>My Tasks</h3>
+                        <p>18</p>
+                    </div>
+                    <div class="kpi-icon blue">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                            <rect x="9" y="3" width="6" height="4" rx="1" />
+                        </svg>
+                    </div>
+                </a>
+                <a th:href="@{/employee/task-manager(status='progress')}" class="kpi"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="kpi-info">
+                        <h3>Pending</h3>
+                        <p>7</p>
+                    </div>
+                    <div class="kpi-icon yellow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </div>
+                </a>
+                <a th:href="@{/employee/task-manager(section='completed')}" class="kpi"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="kpi-info">
+                        <h3>Completed</h3>
+                        <p>9</p>
+                    </div>
+                    <div class="kpi-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                    </div>
+                </a>
+                <a th:href="@{/employee/task-manager(status='delayed')}" class="kpi"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="kpi-info">
+                        <h3>Delayed</h3>
+                        <p>2</p>
+                    </div>
+                    <div class="kpi-icon red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                </a>
+            </div>
+
+            <!-- My Permissions Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>My Assigned Permissions</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="permission-grid">
+                        <!-- Order Entry Permission -->
+                        <div class="permission-card"
+                            th:classappend="${permissions != null and permissions.contains('ORDER_ENTRY')} ? 'enabled' : 'disabled'">
+                            <div class="permission-card-header">
+                                <div class="permission-icon blue">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path
+                                            d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                                        <rect x="9" y="3" width="6" height="4" rx="1" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Order Entry Person</h4>
+                                    <p>Create and manage orders</p>
+                                </div>
+                            </div>
+                            <span class="permission-status"
+                                th:classappend="${permissions != null and permissions.contains('ORDER_ENTRY')} ? 'active' : 'inactive'">
+                                <span th:if="${permissions != null and permissions.contains('ORDER_ENTRY')}">✓
+                                    Enabled</span>
+                                <span th:unless="${permissions != null and permissions.contains('ORDER_ENTRY')}">✗ Not
+                                    Assigned</span>
+                            </span>
+                        </div>
+
+                        <!-- Task Manager Permission -->
+                        <div class="permission-card"
+                            th:classappend="${permissions != null and permissions.contains('TASK_MANAGER')} ? 'enabled' : 'disabled'">
+                            <div class="permission-card-header">
+                                <div class="permission-icon purple">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 11l3 3L22 4" />
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Task Manager</h4>
+                                    <p>Manage and track tasks</p>
+                                </div>
+                            </div>
+                            <span class="permission-status"
+                                th:classappend="${permissions != null and permissions.contains('TASK_MANAGER')} ? 'active' : 'inactive'">
+                                <span th:if="${permissions != null and permissions.contains('TASK_MANAGER')}">✓
+                                    Enabled</span>
+                                <span th:unless="${permissions != null and permissions.contains('TASK_MANAGER')}">✗ Not
+                                    Assigned</span>
+                            </span>
+                        </div>
+
+                        <!-- Dynamic FMS Folders -->
+                        <div class="permission-card" th:each="folder : ${fmsFolders}"
+                            th:if="${permissions != null and permissions.contains('FMS:' + folder.id)}"
+                            th:classappend="${permissions != null and permissions.contains('FMS:' + folder.id)} ? 'enabled' : 'disabled'">
+                            <div class="permission-card-header">
+                                <div class="permission-icon green">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path
+                                            d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 th:text="${folder.name}">Folder Name</h4>
+                                    <p th:text="'Access to ' + ${folder.name}">Access to Folder</p>
+                                </div>
+                            </div>
+                            <span class="permission-status"
+                                th:classappend="${permissions != null and permissions.contains('FMS:' + folder.id)} ? 'active' : 'inactive'">
+                                <span th:if="${permissions != null and permissions.contains('FMS:' + folder.id)}">✓
+                                    Enabled</span>
+                                <span th:unless="${permissions != null and permissions.contains('FMS:' + folder.id)}">✗
+                                    Not Assigned</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Quick Actions</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="quick-actions">
+                        <a th:href="@{/employee/order-entry}" class="action-btn"
+                            th:classappend="${permissions == null or !permissions.contains('ORDER_ENTRY')} ? 'disabled' : ''">
+                            <div class="action-btn-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                                    <line x1="12" y1="11" x2="12" y2="17" />
+                                    <line x1="9" y1="14" x2="15" y2="14" />
+                                </svg>
+                            </div>
+                            <div class="action-btn-text">
+                                <h4>New Order Entry</h4>
+                                <p
+                                    th:text="${permissions != null and permissions.contains('ORDER_ENTRY')} ? 'Create a new order' : 'Permission required'">
+                                    Create a new order</p>
+                            </div>
+                        </a>
+
+                        <a th:href="@{/employee/task-manager}" class="action-btn"
+                            th:classappend="${permissions == null or !permissions.contains('TASK_MANAGER')} ? 'disabled' : ''">
+                            <div class="action-btn-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 11l3 3L22 4" />
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                </svg>
+                            </div>
+                            <div class="action-btn-text">
+                                <h4>View Tasks</h4>
+                                <p
+                                    th:text="${permissions != null and permissions.contains('TASK_MANAGER')} ? 'Manage your tasks' : 'Permission required'">
+                                    Manage your tasks</p>
+                            </div>
+                        </a>
+
+                        <a th:each="folder : ${fmsFolders}" th:href="@{/employee/fms/{id}(id=${folder.id})}"
+                            th:if="${permissions != null and permissions.contains('FMS:' + folder.id)}"
+                            class="action-btn"
+                            th:classappend="${permissions == null or !permissions.contains('FMS:' + folder.id)} ? 'disabled' : ''">
+                            <div class="action-btn-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                </svg>
+                            </div>
+                            <div class="action-btn-text">
+                                <h4 th:text="${folder.name}">FMS</h4>
+                                <p
+                                    th:text="${permissions != null and permissions.contains('FMS:' + folder.id)} ? 'Access Module' : 'Permission required'">
+                                    Access Module</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

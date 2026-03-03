@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>FMS List</title>
+
+    <style>
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #132a63, #1f3c88);
+            color: #fff;
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar .brand span {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #e9efff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .logout-form {
+            margin-top: 18px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: none;
+            background: #f97316;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .app-content {
+            flex: 1;
+        }
+
+        :root {
+            --ink: #0f1b2d;
+            --slate: #6b7b8c;
+            --navy: #1f3c88;
+            --navy-deep: #182e66;
+            --blue: #2f6fed;
+            --gold: #f5c542;
+            --gold-deep: #d9a314;
+            --gold-soft: #fff5d6;
+            --bg: #f3f6fb;
+            --panel: #ffffff;
+            --shadow: 0 14px 30px rgba(11, 24, 48, 0.12);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", "Segoe UI", Tahoma, sans-serif;
+            background:
+                radial-gradient(circle at 10% 18%, rgba(245, 197, 66, 0.18), transparent 45%),
+                radial-gradient(circle at 85% 8%, rgba(47, 111, 237, 0.14), transparent 45%),
+                var(--bg);
+            margin: 0;
+            color: var(--ink);
+        }
+
+        .header {
+            background: #ffffff;
+            color: var(--navy-deep);
+            padding: 16px 26px;
+            border-bottom: 1px solid #e6ebf5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand h2 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: 0.3px;
+        }
+
+        .brand span {
+            font-size: 11px;
+            color: var(--slate);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions input {
+            border: 1px solid #e1e7f2;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            min-width: 200px;
+            outline: none;
+        }
+
+        .header-actions button {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2f6fed, #2154d6);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 18px rgba(47, 111, 237, 0.28);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .container {
+            padding: 28px 36px 60px;
+        }
+
+        .page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .page-title h1 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            color: var(--navy-deep);
+        }
+
+        .page-title p {
+            margin: 0;
+            color: var(--slate);
+            font-size: 12px;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--slate);
+            margin: 8px 0 18px;
+        }
+
+        .breadcrumbs a {
+            color: var(--navy-deep);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .breadcrumbs span {
+            color: #9aa7b6;
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+            color: #2d2b1a;
+            border: none;
+            width: 48px;
+            height: 48px;
+            font-size: 26px;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 12px 20px rgba(217, 163, 20, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(217, 163, 20, 0.38);
+        }
+
+        .folder-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .folder-item {
+            background: var(--panel);
+            border: 1px solid #e6ebf5;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+        }
+
+        .folder-item:hover {
+            transform: translateY(-4px);
+            border-color: #d7dff0;
+            box-shadow: 0 18px 36px rgba(11, 24, 48, 0.16);
+        }
+
+        .folder-link {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--navy-deep);
+        }
+
+        .folder-menu {
+            position: absolute;
+            right: 14px;
+            top: 14px;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            color: var(--slate);
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-btn:hover {
+            background: #eef2f9;
+        }
+
+        .menu-panel {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 32px;
+            background: #fff;
+            border: 1px solid #e4e8f1;
+            border-radius: 10px;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+            padding: 6px;
+            min-width: 120px;
+            z-index: 2;
+        }
+
+        .menu-panel button {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 8px 10px;
+            text-align: left;
+            color: #ef4444;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .menu-panel button:hover {
+            background: #fee2e2;
+        }
+
+        .folder-icon {
+            width: 56px;
+            height: 46px;
+            position: relative;
+            background: linear-gradient(135deg, #ffe08a, var(--gold));
+            border-radius: 10px;
+            box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.08);
+            flex: 0 0 auto;
+        }
+
+        .folder-icon::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: 8px;
+            width: 30px;
+            height: 14px;
+            background: linear-gradient(135deg, #fff1b8, var(--gold));
+            border-radius: 8px 8px 0 0;
+        }
+
+        .folder-icon::after {
+            content: "+";
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--blue);
+            color: #fff;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 14px rgba(47, 111, 237, 0.35);
+        }
+
+        .folder-text {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .folder-name {
+            font-weight: 700;
+            color: var(--navy-deep);
+            line-height: 1.2;
+            font-size: 16px;
+            max-width: 180px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .folder-sub {
+            font-size: 11px;
+            color: var(--slate);
+            background: var(--gold-soft);
+            display: inline-flex;
+            padding: 4px 10px;
+            border-radius: 999px;
+            width: max-content;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .icon-lg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 520px;
+            padding: 22px 24px 24px;
+            margin: 8% auto;
+            border-radius: 16px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 4px;
+            font-size: 18px;
+            color: var(--navy-deep);
+        }
+
+        .modal-sub {
+            margin: 0 0 16px;
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 12px;
+            color: var(--slate);
+            font-weight: 600;
+        }
+
+        .modal input,
+        .modal select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e1e7f2;
+            font-size: 13px;
+            outline: none;
+            background: #fff;
+        }
+
+        .modal input:focus,
+        .modal select:focus {
+            border-color: #2f6fed;
+            box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+        }
+
+        .readonly {
+            background: #f1f4fb;
+            color: #56657a;
+        }
+
+        .modal button {
+            margin-top: 16px;
+            padding: 10px 18px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save {
+            background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+            color: #2d2b1a;
+        }
+
+        .cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-create-fms {
+            width: 400px;
+        }
+
+        .modal-error {
+            display: none;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        .modal-error.show {
+            display: block;
+        }
+
+        .modal-success {
+            display: none;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: #f0fdf4;
+            color: #15803d;
+            font-size: 13px;
+        }
+
+        .modal-success.show {
+            display: block;
+        }
+
+        @media (max-width: 720px) {
+            .modal-content {
+                width: 92%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+
+        .info-box {
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .scroll-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e1e7f2;
+            border-radius: 8px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/admin-navbar :: navbar}"></th:block>
+
+    <div class="app-shell">
+
+        <main class="app-content">
+            <div class="header">
+                <div class="brand">
+                    <h2 th:text="${companyName != null ? companyName : 'Flow Management'}">Flow Management</h2>
+                    <span>Flow Management System</span>
+                </div>
+                <div class="header-actions">
+                    <input type="text" placeholder="Search flows...">
+                    <button type="button" onclick="openModal()" sec:authorize="hasRole('SUPERADMIN')">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1z" />
+                        </svg>
+                        Create New Flow
+                    </button>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="page-title">
+                    <div>
+                        <h1>Flow Management</h1>
+                        <p>Manage and orchestrate your enterprise workflows.</p>
+                    </div>
+                    <button class="add-btn" onclick="openModal()" aria-label="Add flow"
+                        sec:authorize="hasRole('SUPERADMIN')">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="breadcrumbs">
+                    <a href="/admin/dashboard">Home</a>
+                    <span>›</span>
+                    <span>Flows</span>
+                </div>
+
+                <div class="folder-list" id="folderList">
+                    <div class="folder-item" th:each="folder : ${folders}">
+                        <div class="folder-menu" sec:authorize="hasRole('SUPERADMIN')">
+                            <button class="menu-btn" type="button" onclick="toggleMenu(this)" aria-label="More options">
+                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm0 5.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm0 5.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" />
+                                </svg>
+                            </button>
+                            <div class="menu-panel">
+                                <button type="button" th:onclick="'openAccessModal(\'' + ${folder.id} + '\')'"
+                                    style="color:var(--navy);">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path
+                                            d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5Z" />
+                                    </svg>
+                                    Manage Access
+                                </button>
+                                <form method="post" action="/admin/fms-list/delete">
+                                    <input type="hidden" name="id" th:value="${folder.id}">
+                                    <button type="submit">
+                                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path
+                                                d="M9 3a1 1 0 0 0-1 1v1H5a1 1 0 1 0 0 2h1v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7h1a1 1 0 1 0 0-2h-3V4a1 1 0 0 0-1-1H9Zm2 4a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1Zm4 1a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0V8Zm-8 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0V8Z" />
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <a class="folder-link" th:href="@{/admin/fms-process(folderId=${folder.id})}">
+                            <span class="folder-icon"></span>
+                            <span class="folder-text">
+                                <span class="folder-name">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path
+                                            d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v2H3V6Zm0 5h20v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7Z" />
+                                    </svg>
+                                    <span th:text="${folder.name}">O2D</span>
+                                </span>
+                                <span class="folder-sub">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path
+                                            d="M12 2a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm4.1 7.6-4.6 5a1 1 0 0 1-1.5.1l-2.1-2.1a1 1 0 1 1 1.4-1.4l1.4 1.4 3.9-4.2a1 1 0 1 1 1.5 1.2Z" />
+                                    </svg>
+                                    <span th:text="${folder.configured} ? 'Configured' : 'Not configured'">Stored
+                                        locally</span>
+                                </span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create New FMS modal (simple dialog) -->
+            <div id="fmsModal" class="modal">
+                <div class="modal-content modal-create-fms">
+                    <h3>Create New FMS</h3>
+                    <p class="modal-sub">Enter a name for the new flow folder.</p>
+                    <div id="createFmsError" class="modal-error" role="alert" aria-live="polite"></div>
+                    <div id="createFmsSuccess" class="modal-success" role="status" aria-live="polite"></div>
+                    <div class="field">
+                        <label for="fmsNameInput">FMS name</label>
+                        <input id="fmsNameInput" type="text" placeholder="Enter FMS name" maxlength="200"
+                            autocomplete="off">
+                    </div>
+                    <div class="modal-actions">
+                        <button class="save" type="button" id="createFmsSubmit">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M9 19a1 1 0 0 1-.7-.3l-4-4a1 1 0 1 1 1.4-1.4l3.3 3.3 8.3-8.3a1 1 0 1 1 1.4 1.4l-9 9a1 1 0 0 1-.7.3Z" />
+                            </svg>
+                            Submit
+                        </button>
+                        <button class="cancel" type="button" onclick="closeModal()">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M6 6a1 1 0 0 1 1.4 0L12 10.6 16.6 6A1 1 0 1 1 18 7.4L13.4 12 18 16.6A1 1 0 0 1 16.6 18L12 13.4 7.4 18A1 1 0 0 1 6 16.6L10.6 12 6 7.4A1 1 0 0 1 6 6Z" />
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Access Modal -->
+            <div id="accessModal" class="modal">
+                <div class="modal-content">
+                    <h3>Manage Folder Access</h3>
+                    <p class="modal-sub">Select employees who can access this folder.</p>
+                    <div class="field">
+                        <label>Generic Roles (Auto-Access)</label>
+                        <div class="info-box">
+                            Super Admins and Admins automatically have access to all folders.
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:12px;">
+                        <label>Employee Access</label>
+                        <div id="employeeAccessList" class="scroll-list">
+                            <!-- Populated by JS -->
+                            <p style="color:#6b7b8c; font-size:12px;">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="save" type="button" id="saveAccessBtn" onclick="saveAccess()">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M9 19a1 1 0 0 1-.7-.3l-4-4a1 1 0 1 1 1.4-1.4l3.3 3.3 8.3-8.3a1 1 0 1 1 1.4 1.4l-9 9a1 1 0 0 1-.7.3Z" />
+                            </svg>
+                            Save Changes
+                        </button>
+                        <button class="cancel" type="button" onclick="closeAccessModal()">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- External Scripts -->
+            <script src="/js/fms-scripts.js?v=4"></script>
+            <div style="text-align:center; color:#ccc; font-size:10px; padding:10px;">FMS v1.1 - Clean Build</div>
+        </main>
+    </div>
+</body>
+
+</html>

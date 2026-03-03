@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Super Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* HereQuality Brand Palette — Navy Blue + Red Accent */
+            --bg: #F1F5F9;
+            /* Cool gray background */
+            --panel: #FFFFFF;
+            --text: #0F172A;
+            /* Near-black for max readability */
+            --muted: #64748B;
+            /* Slate 500 */
+            --line: #E2E8F0;
+            /* Slate 200 */
+
+            --primary: #1A56DB;
+            /* HQ Blue - Trust */
+            --primary-hover: #1E40AF;
+            /* Deeper blue on hover */
+            --primary-light: #EFF6FF;
+            /* Blue tint for tags */
+
+            --accent: #DC2626;
+            /* HQ Red - Action / War Against Waste */
+            --accent-hover: #B91C1C;
+            --accent-light: #FEF2F2;
+            /* Red tint */
+
+            --success: #059669;
+            /* Green for positive indicators */
+            --dark: #0A1628;
+            /* Deep Navy - Hero BG */
+
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --glow: 0 0 0 3px rgba(26, 86, 219, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Manrope", sans-serif;
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .dashboard-shell {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #0E2952 50%, var(--primary) 100%);
+            color: #fff;
+            border-radius: 20px;
+            padding: 32px 40px;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        /* Subtle pattern overlay */
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.4;
+        }
+
+        /* Decorative red accent circle */
+        .hero::after {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-family: "Sora", sans-serif;
+            font-weight: 700;
+            font-size: 2.25rem;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .hero-sub {
+            margin-top: 8px;
+            color: #94A3B8;
+            /* Slate 400 */
+            font-size: 1rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+
+        .hero-btn {
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+        }
+
+        .hero-btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .hero-btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+        }
+
+        .hero-btn-alt {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            backdrop-filter: blur(4px);
+        }
+
+        .hero-btn-alt:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .hero-btn-logout {
+            background: transparent;
+            color: #94A3B8;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+        }
+
+        .hero-btn-logout:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-stats {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent);
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94A3B8;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            margin-top: 4px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: "Sora", sans-serif;
+            color: #fff;
+        }
+
+        /* --- CONTENT & CARDS --- */
+        .content-grid {
+            margin-top: 40px;
+        }
+
+        .panel-header {
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .panel-header::before {
+            content: '';
+            width: 4px;
+            height: 40px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 4px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-family: "Sora", sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .panel-subtitle {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .admin-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        /* Gradient top bar */
+        .admin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: transparent;
+        }
+
+        .admin-card:hover::before {
+            opacity: 1;
+        }
+
+        .admin-card-body {
+            padding: 24px 20px 20px;
+        }
+
+        .admin-card-content {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .admin-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 2px solid var(--line);
+            background: #F1F5F9;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .admin-name {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-meta {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .admin-email {
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .admin-email:hover {
+            text-decoration: underline;
+            color: var(--primary-hover);
+        }
+
+        /* --- FLOW TAGS --- */
+        .flow-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 14px 20px 16px;
+            border-top: 1px solid var(--line);
+            background: #FAFBFD;
+        }
+
+        .flow-tag {
+            font-size: 0.72rem;
+            background: linear-gradient(135deg, var(--primary-light), #DBEAFE);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 1px solid rgba(26, 86, 219, 0.15);
+            text-transform: uppercase;
+        }
+
+        /* --- MENU --- */
+        .three-dots-menu {
+            position: absolute;
+            top: 16px;
+            right: 12px;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+        }
+
+        .menu-btn:hover {
+            color: var(--text);
+            background: #F1F5F9;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: #fff;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-lg);
+            border-radius: 8px;
+            z-index: 10;
+            min-width: 140px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        .menu-item {
+            width: 100%;
+            padding: 10px 16px;
+            text-align: left;
+            border: none;
+            background: none;
+            font-size: 0.875rem;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: #F8FAFC;
+        }
+
+        .menu-item.delete {
+            color: var(--accent);
+        }
+
+        .menu-item.delete:hover {
+            background: var(--accent-light);
+        }
+
+
+
+
+
+        .flow-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 580px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .flow-item {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 13px;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: .2s ease;
+        }
+
+        .flow-item:hover {
+            border-color: #bdd8f7;
+            box-shadow: 0 10px 20px rgba(11, 41, 84, .08);
+        }
+
+        .flow-title {
+            margin: 0;
+            font-size: .98rem;
+            font-weight: 700;
+        }
+
+        .flow-sub {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+        .assign-btn {
+            border: 1px solid #b5ccf0;
+            color: #0c4d9b;
+            background: #eaf3ff;
+            border-radius: 10px;
+            padding: 8px 11px;
+            font-size: .8rem;
+            font-weight: 700;
+            transition: .2s ease;
+            white-space: nowrap;
+        }
+
+        .assign-btn:hover {
+            background: #d9eaff;
+            border-color: #87afe8;
+        }
+
+        .empty-note {
+            border: 2px dashed #CBD5E1;
+            border-radius: 16px;
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            background: linear-gradient(180deg, #FAFBFD, #F1F5F9);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* --- MODAL --- */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #F8FAFC;
+            border-bottom: 1px solid var(--line);
+            padding: 20px 24px;
+        }
+
+        .modal-title {
+            font-family: "Sora", sans-serif;
+            font-weight: 700;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .form-label {
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: var(--glow);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-1 {
+            animation-delay: .06s;
+        }
+
+        .stagger-2 {
+            animation-delay: .12s;
+        }
+
+        .stagger-3 {
+            animation-delay: .18s;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-list {
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .dashboard-shell {
+                margin-top: 16px;
+                padding: 0 12px 24px;
+            }
+
+            .hero {
+                border-radius: 16px;
+                padding: 18px;
+            }
+
+            .hero-top {
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                justify-content: flex-start;
+                width: 100%;
+            }
+
+            .hero-actions .hero-btn {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                border-radius: 14px;
+                padding: 14px;
+            }
+        }
+
+        /* Right Drawer Styles */
+        .drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s ease;
+        }
+
+        .drawer-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-right {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            height: 100%;
+            background: #ffffff;
+            z-index: 1050;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-right.show {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-title {
+            margin: 0;
+            font-family: "Sora", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .drawer-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .drawer-footer {
+            padding: 24px;
+            border-top: 1px solid var(--line);
+            background: #f8fbff;
+            text-align: right;
+        }
+
+        .check-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        .check-card:hover {
+            border-color: #bfd9f7;
+            background: #fdfeff;
+        }
+
+        .check-card.checked {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: white;
+        }
+
+        .check-card.checked .custom-checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #fff;
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav-brand {
+            font-family: "Sora", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            margin-left: 40px;
+        }
+
+        .nav-item {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            padding: 4px 0;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 1px solid var(--line);
+            transition: all 0.2s;
+            background: #fff;
+            cursor: default;
+        }
+
+        .nav-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #EFF6FF;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .nav-user {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .nav-logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: var(--muted);
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .nav-logout:hover {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            /* Simplified for mobile for now */
+        }
+    </style>
+    <script>
+        function openEditAdminModal(element) {
+            const id = element.getAttribute('data-id');
+            const companyName = element.getAttribute('data-company-name');
+
+            const email = element.getAttribute('data-email');
+
+            // Parse assigned flows (IDs)
+            const assignedFlowsRaw = element.getAttribute('data-assigned-flows');
+            const assignedFlows = assignedFlowsRaw ? assignedFlowsRaw.split(',') : [];
+
+            document.getElementById('editAdminId').value = id;
+            document.getElementById('editCompanyName').value = companyName;
+
+            document.getElementById('editEmail').value = email;
+            // Password left blank intentionally
+
+            // Reset and check FMS boxes
+            const checkboxes = document.querySelectorAll('#editAdminModal input[name="fmsFolders"]');
+            checkboxes.forEach(cb => {
+                cb.checked = assignedFlows.includes(cb.value);
+            });
+
+            new bootstrap.Modal(document.getElementById('editAdminModal')).show();
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div style="display:flex;align-items:center;">
+            <a href="/superadmin/dashboard" class="nav-brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                HereQuality
+            </a>
+            <div class="nav-links">
+                <a href="/superadmin/dashboard" class="nav-item active">Dashboard</a>
+                <a href="/superadmin/company-manage" class="nav-item">Companies</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-profile">
+                <div class="nav-avatar">SA</div>
+                <span class="nav-user">Super Admin</span>
+            </div>
+            <a href="/logout" class="nav-logout" title="Logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-shell">
+        <div class="hero">
+            <div class="hero-top">
+                <div>
+                    <h1>Super Admin Dashboard</h1>
+                    <p class="hero-sub">Create and allocate FMS flows centrally, then allow each admin to manage only
+                        assigned order details and process configurations.</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="hero-btn hero-btn-alt" data-bs-toggle="modal" data-bs-target="#createAdminModal">
+                        + Create Admin
+                    </button>
+
+                </div>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Admins</div>
+                    <div class="stat-value" th:text="${#lists.size(admins)}">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Flows</div>
+                    <div class="stat-value" th:text="${#lists.size(folders)}">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Control Plane</div>
+                    <div class="stat-value">Active</div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <section class="content-grid">
+            <article class="panel stagger-1"
+                style="display:flex; align-items:center; justify-content:center; min-height:180px;">
+                <a href="/superadmin/company-manage" class="hero-btn hero-btn-primary"
+                    style="font-size:1.4rem; padding:20px 60px; display:inline-flex; align-items:center; gap:14px; border-radius:14px; font-weight:700; letter-spacing:0.5px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Company Manage
+                </a>
+            </article>
+
+
+        </section>
+    </div>
+
+    <div class="modal fade" id="createAdminModal" tabindex="-1" aria-labelledby="createAdminModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAdminModalLabel">Create New Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/superadmin/create-admin" method="post" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="companyName" class="form-label small fw-bold">Company Name</label>
+                                <input type="text" class="form-control form-control-sm" id="companyName"
+                                    name="companyName" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="companyLogo" class="form-label small fw-bold">Company Logo <span
+                                        class="text-muted fw-normal">(Optional)</span></label>
+                                <input type="file" class="form-control form-control-sm" id="companyLogo"
+                                    name="companyLogo" accept="image/*">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label small fw-bold">Email (Username)</label>
+                                <input type="email" class="form-control form-control-sm" id="email" name="email"
+                                    required>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="password" class="form-label small fw-bold">Password</label>
+                                <input type="password" class="form-control form-control-sm" id="password"
+                                    name="password" required>
+                            </div>
+
+
+
+                            <div class="col-12 mt-4 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-primary px-4">Create Admin</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editAdminModal" tabindex="-1" aria-labelledby="editAdminModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAdminModalLabel">Edit Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/superadmin/update-admin" method="post" enctype="multipart/form-data">
+                        <input type="hidden" id="editAdminId" name="id">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="editCompanyName" class="form-label small fw-bold">Company Name</label>
+                                <input type="text" class="form-control form-control-sm" id="editCompanyName"
+                                    name="companyName" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editCompanyLogo" class="form-label small fw-bold">Company Logo <span
+                                        class="text-muted fw-normal">(Optional)</span></label>
+                                <input type="file" class="form-control form-control-sm" id="editCompanyLogo"
+                                    name="companyLogo" accept="image/*">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editEmail" class="form-label small fw-bold">Email (Username)</label>
+                                <input type="email" class="form-control form-control-sm" id="editEmail" name="email"
+                                    required>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="editPassword" class="form-label small fw-bold">New Password <span
+                                        class="text-muted fw-normal">(Leave blank to keep current)</span></label>
+                                <input type="password" class="form-control form-control-sm" id="editPassword"
+                                    name="password">
+                            </div>
+
+
+
+                            <div class="col-12 mt-4 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-primary px-4">Save Changes</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createFlowModal" tabindex="-1" aria-labelledby="createFlowModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createFlowModalLabel">Create New FMS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="createFlowError" class="alert alert-danger d-none" role="alert"></div>
+                    <form id="createFlowForm">
+                        <div class="mb-3">
+                            <label for="flowName" class="form-label">FMS Name</label>
+                            <input type="text" class="form-control" id="flowName" name="name"
+                                placeholder="Enter FMS name" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" id="createFlowBtn" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="assignFlowModal" tabindex="-1" aria-labelledby="assignFlowModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignFlowModalLabel">Assign Admins</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-2">Flow: <span id="assignFlowName">-</span></p>
+                    <div id="assignFlowError" class="alert alert-danger d-none" role="alert"></div>
+                    <div id="assignAdminList" class="border rounded p-2" style="max-height: 280px; overflow:auto;">
+                        Loading...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveAssignBtn" onclick="saveFlowAccess()">Save
+                        Assignment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeAdminFlowDrawer()"></div>
+    <div class="drawer-right" id="adminFlowDrawer">
+        <div class="drawer-header">
+            <h3 class="drawer-title">Flow Assignment</h3>
+            <button type="button" class="btn-close" onclick="closeAdminFlowDrawer()"></button>
+        </div>
+        <div class="drawer-body">
+            <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">
+                Manage flow access for <strong id="drawerAdminName">Admin</strong>.
+            </p>
+            <div id="drawerFlowList">
+                <!-- Checkboxes injected here -->
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary" onclick="saveAdminFlows()" id="saveAdminFlowsBtn">Save Changes</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const allAdmins = /*[[${admins}]]*/[];
+        const allFolders = /*[[${folders}]]*/[];
+        /*]]>*/
+    </script>
+    <script>
+        let currentAdminIdForDrawer = null;
+        let currentFlowId = null;
+        const createFlowModalEl = document.getElementById('createFlowModal');
+        const assignFlowModalEl = document.getElementById('assignFlowModal');
+        const createFlowModal = createFlowModalEl ? new bootstrap.Modal(createFlowModalEl) : null;
+        const assignFlowModal = assignFlowModalEl ? new bootstrap.Modal(assignFlowModalEl) : null;
+
+
+        document.getElementById('createFlowForm')?.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const input = document.getElementById('flowName');
+            const btn = document.getElementById('createFlowBtn');
+            const err = document.getElementById('createFlowError');
+            const name = (input?.value || '').trim();
+
+            if (err) {
+                err.classList.add('d-none');
+                err.textContent = '';
+            }
+            if (!name) {
+                if (err) {
+                    err.textContent = 'Flow name is required.';
+                    err.classList.remove('d-none');
+                }
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch('/admin/api/fms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    if (err) {
+                        err.textContent = data.error || 'Failed to create flow.';
+                        err.classList.remove('d-none');
+                    }
+                    return;
+                }
+                if (createFlowModal) createFlowModal.hide();
+                window.location.reload();
+            } catch (ex) {
+                if (err) {
+                    err.textContent = 'Network error while creating flow.';
+                    err.classList.remove('d-none');
+                }
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
+
+        async function openAssignModal(button) {
+            const folderId = button.getAttribute('data-folder-id');
+            const folderName = button.getAttribute('data-folder-name');
+            currentFlowId = folderId;
+            document.getElementById('assignFlowName').textContent = folderName || '-';
+            const list = document.getElementById('assignAdminList');
+            const err = document.getElementById('assignFlowError');
+            if (err) {
+                err.classList.add('d-none');
+                err.textContent = '';
+            }
+            if (list) {
+                list.innerHTML = 'Loading...';
+            }
+            if (assignFlowModal) assignFlowModal.show();
+
+            try {
+                const res = await fetch('/superadmin/api/folder-access?folderId=' + encodeURIComponent(folderId));
+                if (!res.ok) throw new Error('Failed to load admin access');
+                const admins = await res.json();
+                if (!list) return;
+                if (!admins.length) {
+                    list.innerHTML = '<span class="text-muted">No admins found.</span>';
+                    return;
+                }
+                list.innerHTML = admins.map((admin) => {
+                    const uname = admin.username || '';
+                    const email = admin.email || '';
+                    const checked = admin.hasAccess ? 'checked' : '';
+                    return `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input admin-access-check" type="checkbox" value="${uname}" id="admin_${uname}" ${checked}>
+                            <label class="form-check-label" for="admin_${uname}">
+                                ${uname} <span class="text-muted">(${email || 'no-email'})</span>
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (ex) {
+                if (list) list.innerHTML = '<span class="text-danger">Error loading admins.</span>';
+            }
+        }
+
+        async function saveFlowAccess() {
+            if (!currentFlowId) return;
+            const btn = document.getElementById('saveAssignBtn');
+            const err = document.getElementById('assignFlowError');
+            if (err) {
+                err.classList.add('d-none');
+                err.textContent = '';
+            }
+
+            const checks = document.querySelectorAll('.admin-access-check');
+            const access = {};
+            checks.forEach((cb) => {
+                access[cb.value] = cb.checked;
+            });
+
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch('/superadmin/api/folder-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ folderId: currentFlowId, access })
+                });
+                if (!res.ok) throw new Error('Save failed');
+                if (assignFlowModal) assignFlowModal.hide();
+            } catch (ex) {
+                if (err) {
+                    err.textContent = 'Failed to save assignment.';
+                    err.classList.remove('d-none');
+                }
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function toggleCardMenu(btn, e) {
+            e.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            // Close all other dropdowns
+            document.querySelectorAll('.menu-dropdown').forEach(d => {
+                if (d !== dropdown) d.classList.remove('show');
+            });
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('show'));
+        });
+
+        async function deleteAdmin(adminId) {
+            if (!confirm('Are you sure you want to delete this admin? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/superadmin/delete-admin/' + adminId, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    // Remove the card visually or reload
+                    window.location.reload();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.error || 'Failed to delete admin.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the admin.');
+            }
+        }
+
+        function openAdminFlowDrawer(card) {
+            const adminId = card.getAttribute('data-admin-id');
+            const admin = allAdmins.find(a => a.id === adminId);
+            if (!admin) return;
+
+            currentAdminIdForDrawer = adminId;
+            document.getElementById('drawerAdminName').textContent = admin.username || admin.email;
+
+            const container = document.getElementById('drawerFlowList');
+            container.innerHTML = '';
+
+            const perms = admin.permissions || [];
+
+            allFolders.forEach(folder => {
+                const hasAccess = perms.includes('ADMIN_FMS:' + folder.id);
+                const div = document.createElement('div');
+                div.className = `check-card ${hasAccess ? 'checked' : ''}`;
+                div.onclick = function (e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        const cb = this.querySelector('input');
+                        cb.checked = !cb.checked;
+                        this.classList.toggle('checked', cb.checked);
+                    }
+                };
+
+                div.innerHTML = `
+                    <div class="custom-checkbox">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="width:12px; height:12px; opacity:${hasAccess ? 1 : 0}">
+                             <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-weight:600; font-size:0.95rem;">${folder.name}</div>
+                    </div>
+                    <input type="checkbox" style="display:none" value="${folder.id}" ${hasAccess ? 'checked' : ''}>
+                `;
+
+                // Add change listener to input for syncing class if clicked directly (though hidden)
+                const input = div.querySelector('input');
+                input.addEventListener('change', function () {
+                    div.classList.toggle('checked', this.checked);
+                    const icon = div.querySelector('svg');
+                    icon.style.opacity = this.checked ? 1 : 0;
+                });
+
+                container.appendChild(div);
+            });
+
+            document.getElementById('drawerBackdrop').classList.add('show');
+            document.getElementById('adminFlowDrawer').classList.add('show');
+        }
+
+        function closeAdminFlowDrawer() {
+            document.getElementById('drawerBackdrop').classList.remove('show');
+            document.getElementById('adminFlowDrawer').classList.remove('show');
+            currentAdminIdForDrawer = null;
+        }
+
+        async function saveAdminFlows() {
+            if (!currentAdminIdForDrawer) return;
+
+            const btn = document.getElementById('saveAdminFlowsBtn');
+            const inputs = document.querySelectorAll('#drawerFlowList input[type="checkbox"]');
+            const folderIds = [];
+            inputs.forEach(input => {
+                if (input.checked) folderIds.push(input.value);
+            });
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Saving...';
+            }
+
+            try {
+                const res = await fetch('/superadmin/api/admin-fms-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentAdminIdForDrawer, folderIds: folderIds })
+                });
+
+                if (res.ok) {
+                    // Update local data to reflect changes without reload
+                    const admin = allAdmins.find(a => a.id === currentAdminIdForDrawer);
+                    if (admin) {
+                        // Reset FMS perms
+                        let newPerms = (admin.permissions || []).filter(p => !p.startsWith('ADMIN_FMS:'));
+                        folderIds.forEach(fid => newPerms.push('ADMIN_FMS:' + fid));
+                        admin.permissions = newPerms;
+                    }
+                    closeAdminFlowDrawer();
+                    // Optional: Show toast
+                } else {
+                    alert('Failed to save permissions.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error saving permissions.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Save Changes';
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

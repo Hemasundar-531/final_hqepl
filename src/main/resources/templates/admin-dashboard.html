@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin Dashboard | Flow Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #f97316;
+            --accent-soft: #fff7ed;
+            --success: #10b981;
+            --success-soft: #d1fae5;
+            --violet: #7c3aed;
+            --violet-soft: #e9d5ff;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+            mix-blend-mode: screen;
+        }
+
+        .orb-1 {
+            top: -10%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary), transparent 70%);
+        }
+
+        .orb-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--accent), transparent 70%);
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            top: 40%;
+            left: 40%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--violet), transparent 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            33% {
+                transform: translate(30px, -50px);
+            }
+
+            66% {
+                transform: translate(-20px, 20px);
+            }
+        }
+
+        /* Layout */
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 24px;
+        }
+
+        /* Header */
+        .page-header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 48px 16px 24px;
+        }
+
+        .page-header h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-header p {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary-soft), var(--violet-soft));
+            color: #1e3a8a;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+
+        .breadcrumbs a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* Cards Grid */
+        .cards {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 32px auto 0;
+            padding: 0 16px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 32px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            border-top: 4px solid transparent;
+            /* Prepare for colored top border */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .card:nth-child(1) {
+            border-top-color: #10b981;
+            /* Employee Card Color */
+        }
+
+        .card:nth-child(2) {
+            border-top-color: #ca8a04;
+            /* FMS Card Color (Gold/Orange) */
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.15), transparent 70%);
+            z-index: 0;
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(3deg);
+        }
+
+        .icon-emp {
+            background: linear-gradient(135deg, #12b981, #0ea5e9);
+        }
+
+        .icon-fms {
+            background: linear-gradient(135deg, #7c3aed, #f97316);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .card-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-emp {
+            background: linear-gradient(135deg, #10b981, #0ea5e9);
+        }
+
+        .btn-fms {
+            background: linear-gradient(135deg, #7c3aed, #f97316);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        /* Footer */
+        .footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding-bottom: 24px;
+        }
+
+        /* Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .cards {
+                grid-template-columns: 1fr;
+                padding: 0 12px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .card-header {
+                gap: 12px;
+            }
+
+            .card-icon {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{fragments/admin-navbar :: navbar}"></th:block>
+
+    <div class="app-shell">
+        <main class="app-content">
+            <div class="page">
+                <div class="hero">
+                    <h1>Admin Dashboard</h1>
+                    <p th:text="${companyName != null ? 'Manage employees and workflows efficiently within the ' + companyName + ' ecosystem.' : 'Manage employees and workflows efficiently.'}">Manage employees and workflows efficiently within the HQEPL ecosystem.</p>
+                    <div class="status-pill">
+                        <span class="status-dot"></span>
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 2a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm4.1 7.6-4.6 5a1 1 0 0 1-1.5.1l-2.1-2.1a1 1 0 1 1 1.4-1.4l1.4 1.4 3.9-4.2a1 1 0 1 1 1.5 1.2Z" />
+                        </svg>
+                        System Operational
+                    </div>
+                    <div class="breadcrumbs">
+                        <a href="/admin/dashboard">Home</a>
+                        <span>›</span>
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="cards">
+                    <div class="card">
+                        <div class="card-icon icon-emp">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.6-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-3.4-4.7-5-8-5Z" />
+                            </svg>
+                        </div>
+                        <h3>Employee Manage</h3>
+                        <p>Oversee your workforce. Manage profiles, roles, departments, and organizational hierarchy.
+                        </p>
+                        <button class="btn btn-emp" onclick="location.href='/admin/employees'">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M13 5a1 1 0 0 1 1.7-.7l5 5a1 1 0 0 1 0 1.4l-5 5A1 1 0 0 1 13 15V9a1 1 0 0 1 1-1h-7a1 1 0 1 1 0-2h7a1 1 0 0 1-1-1Z" />
+                            </svg>
+                            Manage Employees
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-icon icon-fms">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v2H3V6Zm0 5h20v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7Z" />
+                            </svg>
+                        </div>
+                        <h3>FMS Manage</h3>
+                        <p>Design and deploy workflows. Monitor submissions, review tasks, and analyze operational data.
+                        </p>
+                        <button class="btn btn-fms" onclick="location.href='/admin/fms-list'">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M13 5a1 1 0 0 1 1.7-.7l5 5a1 1 0 0 1 0 1.4l-5 5A1 1 0 0 1 13 15V9a1 1 0 0 1 1-1h-7a1 1 0 1 1 0-2h7a1 1 0 0 1-1-1Z" />
+                            </svg>
+                            Manage Flows
+                        </button>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <span th:text="${'© 2026 ' + (companyName != null ? companyName : 'Flow Management') + '. All rights reserved.'}">© 2026 HQEPL - Here Quality Excellence Flow Management System. All rights reserved.</span>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

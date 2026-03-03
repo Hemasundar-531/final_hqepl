@@ -1210,15 +1210,7 @@
                             th:text="${dashboardStats != null and dashboardStats.get('delayed') != null ? dashboardStats.get('delayed') : 0}">
                             5</div>
                     </div>
-                    <div class="stat-card" style="border-top-color: #3b82f6;">
-                        <div class="stat-head">
-                            <div class="stat-title">In Progress</div>
-                            <span class="stat-icon">🔄</span>
-                        </div>
-                        <div class="stat-value" style="color:#3b82f6;"
-                            th:text="${dashboardStats != null and dashboardStats.get('inProgress') != null ? dashboardStats.get('inProgress') : 0}">
-                            2</div>
-                    </div>
+
                     <div class="stat-card" style="border-top-color: #8b5cf6;">
                         <div class="stat-head">
                             <div class="stat-title">ATS Score</div>
@@ -1286,11 +1278,12 @@
                                         2026-01-01</td>
                                     <td class="text-center">
                                         <span class="status-badge"
-                                            th:classappend="${#strings.toLowerCase(task.status) == 'completed' ? 'completed' : #strings.toLowerCase(task.status) == 'in progress' ? 'in-progress' : #strings.toLowerCase(task.status) == 'overdue' ? 'overdue' : #strings.toLowerCase(task.status) == 'delayed' ? 'delayed' : 'on-time'}"
+                                            th:classappend="${#strings.toLowerCase(task.status) == 'completed' ? 'completed' : #strings.toLowerCase(task.status) == 'overdue' ? 'overdue' : #strings.toLowerCase(task.status) == 'delayed' ? 'delayed' : 'on-time'}"
                                             th:text="${task.status}">On Time</span>
                                     </td>
                                     <td class="text-center">
-                                        <input type="checkbox" class="fms-pending-checkbox" th:value="${task.planningEntryId + ':' + task.taskName}">
+                                        <input type="checkbox" class="fms-pending-checkbox"
+                                            th:value="${task.planningEntryId + ':' + task.taskName}">
                                     </td>
                                 </tr>
                                 <tr
@@ -1527,7 +1520,7 @@
 
         // CHART.JS INITIALIZATION
         function initChart() {
-            let data = dashboardStats && dashboardStats.chart_data ? dashboardStats.chart_data : [];
+            let data = dashboardStats && dashboardStats.chart_data ? dashboardStats.chart_data.filter(d => d.name !== 'In Progress') : [];
             let otcScore = dashboardStats && dashboardStats.otc_score ? dashboardStats.otc_score : '0%';
 
             // Check if data is empty or all values are 0
@@ -1741,7 +1734,7 @@
             }
 
             const selectedTasks = [];
-            
+
             // Get FMS pending task values
             fmsPendingChecked.forEach(checkbox => {
                 const value = checkbox.value; // format: planningId:stepName
@@ -1761,43 +1754,43 @@
                 },
                 body: JSON.stringify(selectedTasks)
             })
-            .then(async response => {
-                console.log('Response status:', response.status);
-                const rawText = await response.text();
-                let data = null;
-                try {
-                    data = rawText ? JSON.parse(rawText) : null;
-                } catch (e) {
-                    if (!response.ok) {
-                        throw new Error('Server returned status ' + response.status);
+                .then(async response => {
+                    console.log('Response status:', response.status);
+                    const rawText = await response.text();
+                    let data = null;
+                    try {
+                        data = rawText ? JSON.parse(rawText) : null;
+                    } catch (e) {
+                        if (!response.ok) {
+                            throw new Error('Server returned status ' + response.status);
+                        }
+                        throw new Error('Invalid server response');
                     }
-                    throw new Error('Invalid server response');
-                }
 
-                if (!response.ok) {
-                    const serverMessage = data && data.message ? data.message : ('Server returned status ' + response.status);
-                    throw new Error(serverMessage);
-                }
+                    if (!response.ok) {
+                        const serverMessage = data && data.message ? data.message : ('Server returned status ' + response.status);
+                        throw new Error(serverMessage);
+                    }
 
-                return data;
-            })
-            .then(data => {
-                console.log('Response data:', data);
-                if (data && data.success) {
-                    alert('Success! ' + data.updatedCount + ' task(s) marked as completed.');
-                    // Clear checkboxes
-                    document.querySelectorAll('.fms-pending-checkbox:checked').forEach(cb => cb.checked = false);
-                    // Refresh the page to see updated statuses
-                    setTimeout(() => location.reload(), 500);
-                } else {
-                    const errorMsg = (data && data.message) ? data.message : 'Unknown error';
-                    alert('Error: ' + errorMsg);
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                alert('Failed to submit tasks: ' + error.message);
-            });
+                    return data;
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    if (data && data.success) {
+                        alert('Success! ' + data.updatedCount + ' task(s) marked as completed.');
+                        // Clear checkboxes
+                        document.querySelectorAll('.fms-pending-checkbox:checked').forEach(cb => cb.checked = false);
+                        // Refresh the page to see updated statuses
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        const errorMsg = (data && data.message) ? data.message : 'Unknown error';
+                        alert('Error: ' + errorMsg);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    alert('Failed to submit tasks: ' + error.message);
+                });
         }
 
         // CLOSE MODAL ON OUTSIDE CLICK

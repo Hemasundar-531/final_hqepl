@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import com.company.flowmanagement.service.TaskService;
@@ -460,35 +461,14 @@ public class EmployeeController {
             return "redirect:/employee/dashboard";
         }
 
-        // Try to load folder-specific template, fallback to generic template
+        // Load folder-specific template, fallback to generic template
         Optional<O2DConfig> folderOpt = o2dConfigRepository.findById(folderId);
-        if (folderOpt.isPresent()) {
-            O2DConfig config = folderOpt.get();
-            model.addAttribute("currentFolder", config);
-
-            // --- DATA CLEANUP BUGFIX ---
-            // The previous bug saved step statuses directly into the global O2DConfig
-            // template.
-            // We must ensure the global template steps are always "In Progress".
-            boolean needsCleanup = false;
-            if (config.getProcessDetails() != null) {
-                for (ProcessStep step : config.getProcessDetails()) {
-                    if (step.getStatus() != null && !"In Progress".equalsIgnoreCase(step.getStatus())) {
-                        step.setStatus("In Progress");
-                        step.setCompletionDate(null);
-                        needsCleanup = true;
-                    }
-                }
-            }
-            if (needsCleanup) {
-                o2dConfigRepository.save(config);
-            }
-            // ---------------------------
+        if (folderOpt.isEmpty()) {
+            return "redirect:/employee/dashboard";
         }
 
-        // Try folder-specific template first (e.g., employee-fms-folder1.html)
-        // If it doesn't exist, Spring will throw an error, so we'll use a generic
-        // template
+        O2DConfig config = folderOpt.get();
+        model.addAttribute("currentFolder", config);
 
         // --- TASK MANAGER INTEGRATION ---
         model.addAttribute("allEmployees", employeeService.getAllEmployees());
@@ -511,10 +491,24 @@ public class EmployeeController {
             model.addAttribute("delegatedTasks", tasks.get("delegatedTasks"));
 
             // --- FMS ORDER PROCESS TASKS ---
-            // Fetch all planning entries for this folder (Active Orders)
-            List<PlanningEntry> planningEntries = planningEntryRepository.findByFolderIdOrderByCreatedAtAsc(folderId);
+            // 1. Fetch ALL planning entries for this folder
+            List<PlanningEntry> allPlannings = planningEntryRepository.findByFolderIdOrderByCreatedAtAsc(folderId);
 
-            // Fetch all order entries to get details (Customer, Company etc.)
+            // 2. DEDUPLICATE: Only process the LATEST PlanningEntry for each unique OrderID
+            Map<String, PlanningEntry> latestPlanningByOrder = new LinkedHashMap<>();
+            if (allPlannings != null) {
+                for (PlanningEntry plan : allPlannings) {
+                    String ordId = plan.getOrderId();
+                    if (ordId != null) {
+                        ordId = ordId.trim();
+                        if (!ordId.isEmpty()) {
+                            latestPlanningByOrder.put(ordId, plan);
+                        }
+                    }
+                }
+            }
+
+            // 3. Fetch all order entries to get details (Customer, Company etc.)
             List<OrderEntry> allEntries = orderEntryRepository.findByFolderIdOrderByCreatedAtDesc(folderId);
 
             // Map OrderID -> Latest OrderEntry
@@ -532,19 +526,16 @@ public class EmployeeController {
             Map<String, List<Map<String, String>>> fmsPendingTasksByStep = new LinkedHashMap<>();
 
             try {
-                if (folderOpt.isPresent() && folderOpt.get().getProcessDetails() != null) {
-                    O2DConfig config = folderOpt.get();
+                if (config.getProcessDetails() != null) {
                     int taskSr = 1;
 
-                    System.out.println(
-                            "FMS Folder: Processing " + planningEntries.size() + " orders for user: " + username);
-                    for (PlanningEntry plan : planningEntries) {
+                    // Iterate over DEDUPLICATED latest planning instances
+                    for (PlanningEntry plan : latestPlanningByOrder.values()) {
                         String orderId = plan.getOrderId();
                         String startDateStr = plan.getStartDate();
 
-                        if (orderId == null || startDateStr == null) {
+                        if (orderId == null || startDateStr == null)
                             continue;
-                        }
 
                         LocalDate startDate = null;
                         try {
@@ -559,17 +550,28 @@ public class EmployeeController {
                         String companyName = findFieldValue(orderDetails != null ? orderDetails.getFields() : null,
                                 "Company Name", "company_name");
 
-                        // Get employee display name for matching (may differ from login username)
                         String employeeDisplayName = (String) model.getAttribute("employeeName");
 
+                        // Iterate over GLOBAL process steps (READ ONLY)
                         for (ProcessStep step : config.getProcessDetails()) {
-                            // Match step's responsiblePerson against login username OR display name
-                            String resp = step.getResponsiblePerson();
+                            String stepName = step.getStepProcess();
+
+                            // ARCHITECTURE FIX: Read responsible person from PlanningEntry (per order)
+                            // Fallback to O2DConfig for migration safety.
+                            String resp = (plan.getStepResponsiblePersons() != null)
+                                    ? plan.getStepResponsiblePersons().get(stepName)
+                                    : null;
+
+                            if (resp == null || resp.isBlank()) {
+                                resp = step.getResponsiblePerson();
+                            }
+
+                            // Match step's responsiblePerson against login user OR display name
                             boolean isAssignedToMe = resp != null && (resp.trim().equalsIgnoreCase(username.trim()) ||
                                     (employeeDisplayName != null
                                             && resp.trim().equalsIgnoreCase(employeeDisplayName.trim())));
-                            if (isAssignedToMe) {
 
+                            if (isAssignedToMe) {
                                 Map<String, String> taskMap = new LinkedHashMap<>();
                                 taskMap.put("sr", String.valueOf(taskSr++));
                                 taskMap.put("planningEntryId", plan.getId());
@@ -577,11 +579,12 @@ public class EmployeeController {
                                 taskMap.put("orderId", orderId);
                                 taskMap.put("customerName", customerName);
                                 taskMap.put("companyName", companyName);
-                                taskMap.put("responsiblePerson", step.getResponsiblePerson());
-                                String stepName = step.getStepProcess();
+                                taskMap.put("responsiblePerson", (resp != null ? resp : "-"));
+
                                 taskMap.put("taskName", stepName);
 
-                                // Target Date priority: saved planning value -> step.days -> order entry date
+                                // Target Date priority: 1. saved planning value, 2. calculated days, 3. order
+                                // entry date
                                 String savedTargetDate = plan.getStepTargetDates() != null
                                         ? plan.getStepTargetDates().get(stepName)
                                         : null;
@@ -590,7 +593,6 @@ public class EmployeeController {
                                 } else if (step.getDays() != null) {
                                     taskMap.put("targetDate", startDate.plusDays(step.getDays()).toString());
                                 } else {
-                                    // Try common date field names from order entry
                                     Map<String, String> oFields = orderDetails != null ? orderDetails.getFields()
                                             : null;
                                     String orderDate = findFieldValue(oFields, "Target Date", "target_date");
@@ -598,15 +600,11 @@ public class EmployeeController {
                                         orderDate = findFieldValue(oFields, "Delivery Date", "delivery_date");
                                     if (orderDate == null || orderDate.equals("-"))
                                         orderDate = findFieldValue(oFields, "Due Date", "due_date");
-                                    if (orderDate == null || orderDate.equals("-"))
-                                        orderDate = findFieldValue(oFields, "Date", "date");
                                     taskMap.put("targetDate",
-                                            (orderDate != null && !orderDate.equals("-") && !orderDate.isBlank())
-                                                    ? orderDate
-                                                    : "-");
+                                            (orderDate != null && !orderDate.equals("-")) ? orderDate : "-");
                                 }
 
-                                // Check status from the individual planning entry
+                                // ISOLATION FIX: Read status/completion ONLY from the specific PlanningEntry
                                 Map<String, String> stepStatuses = plan.getStepStatuses();
                                 Map<String, String> stepCompletionDates = plan.getStepCompletionDates();
 
@@ -619,31 +617,25 @@ public class EmployeeController {
                                         ? stepCompletionDates.get(stepName)
                                         : "";
 
-                                taskMap.put("taskName", stepName);
                                 taskMap.put("completionDate", completionDate);
                                 taskMap.put("status", status);
                                 taskMap.put("pdf", "");
 
-                                // Categorize
-                                boolean isOverdue = false;
+                                // Categorize Overdue
                                 if (taskMap.get("targetDate") != null && !taskMap.get("targetDate").equals("-")) {
                                     try {
                                         LocalDate target = LocalDate.parse(taskMap.get("targetDate"));
                                         if (target.isBefore(LocalDate.now()) && !"Completed".equalsIgnoreCase(status)) {
-                                            isOverdue = true;
                                             taskMap.put("status", "Overdue");
+                                            status = "Overdue";
                                         }
-                                    } catch (Exception e) {
+                                    } catch (Exception ignored) {
                                     }
                                 }
 
                                 if ("Completed".equalsIgnoreCase(status)) {
-                                    // Double-check: only add if still assigned to current user
-                                    if (isAssignedToMe) {
-                                        fmsCompletedTasks.add(taskMap);
-                                    }
+                                    fmsCompletedTasks.add(taskMap);
                                 } else {
-                                    // Add to Grouped Map (whether in progress or overdue)
                                     fmsPendingTasksByStep.computeIfAbsent(stepName, k -> new ArrayList<>())
                                             .add(taskMap);
                                 }
@@ -660,19 +652,18 @@ public class EmployeeController {
             model.addAttribute("fmsCompletedTasks", fmsCompletedTasks);
             model.addAttribute("fmsPendingTasksByStep", fmsPendingTasksByStep);
 
-            // ── FMS SPECIFIC DASHBOARD STATS ─────────────────────────────────────────
+            // ── FMS DASHBOARD STATS ──────────────────────────────────────────────────
             int fmsInProgress = 0;
             int fmsOverdueCount = 0;
             for (List<Map<String, String>> stepTasks : fmsPendingTasksByStep.values()) {
                 for (Map<String, String> task : stepTasks) {
-                    String status = task.get("status");
-                    if ("Overdue".equalsIgnoreCase(status)) {
+                    if ("Overdue".equalsIgnoreCase(task.get("status")))
                         fmsOverdueCount++;
-                    } else {
+                    else
                         fmsInProgress++;
-                    }
                 }
             }
+
             int fmsOnTime = 0;
             int fmsDelayed = 0;
             double fmsAtsTotalScore = 0;
@@ -682,50 +673,35 @@ public class EmployeeController {
                 String targetDateStr = task.get("targetDate");
                 String completionDateStr = task.get("completionDate");
                 String startDateStr2 = task.get("startDate");
-                if (completionDateStr != null && !completionDateStr.isBlank()
-                        && targetDateStr != null && !targetDateStr.equals("-")) {
+
+                if (completionDateStr != null && !completionDateStr.isBlank() && targetDateStr != null
+                        && !targetDateStr.equals("-")) {
                     try {
                         LocalDate target = LocalDate.parse(targetDateStr);
                         LocalDate completion = LocalDate.parse(completionDateStr);
                         if (!completion.isAfter(target)) {
                             fmsOnTime++;
-                            task.put("status", "Completed");
                         } else {
                             fmsDelayed++;
                             task.put("status", "Delayed");
                         }
-                        // ATS calculation for this completed task follow user rules
+
                         if (startDateStr2 != null && !startDateStr2.isBlank()) {
-                            try {
-                                LocalDate sd = LocalDate.parse(startDateStr2);
-                                double ats;
-
-                                if (!completion.isAfter(target)) {
-                                    // Rule 4: If Target Date > Completion Date (or equal) → ATS = 100%
-                                    ats = 100;
+                            LocalDate sd = LocalDate.parse(startDateStr2);
+                            double ats = 0;
+                            if (!completion.isAfter(target)) {
+                                ats = 100;
+                            } else {
+                                long compStartDiff = java.time.temporal.ChronoUnit.DAYS.between(sd, completion);
+                                long targetStartDiff = java.time.temporal.ChronoUnit.DAYS.between(sd, target);
+                                if (sd.isEqual(target)) {
+                                    ats = compStartDiff > 0 ? (1.0 / compStartDiff) * 100 : 0;
                                 } else {
-                                    long compStartDiff = java.time.temporal.ChronoUnit.DAYS.between(sd, completion);
-                                    long targetStartDiff = java.time.temporal.ChronoUnit.DAYS.between(sd, target);
-
-                                    if (sd.isEqual(target)) {
-                                        // Rule 2: If Start Date = Target Date ≠ Completion Date
-                                        // ATS = 1 / (Completion Date − Start Date)
-                                        ats = compStartDiff > 0 ? (1.0 / compStartDiff) * 100 : 0;
-                                    } else {
-                                        // Rule 3: If Start Date ≠ Target Date ≠ Completion Date
-                                        // ATS = (Target Date − Start Date) / (Completion Date − Start Date)
-                                        ats = compStartDiff > 0 ? ((double) targetStartDiff / compStartDiff) * 100 : 0;
-                                    }
+                                    ats = compStartDiff > 0 ? ((double) targetStartDiff / compStartDiff) * 100 : 0;
                                 }
-
-                                if (ats > 100)
-                                    ats = 100;
-                                if (ats < 0)
-                                    ats = 0;
-                                fmsAtsTotalScore += ats;
-                                fmsAtsCount++;
-                            } catch (Exception ignored) {
                             }
+                            fmsAtsTotalScore += Math.max(0, Math.min(100, ats));
+                            fmsAtsCount++;
                         }
                     } catch (Exception e2) {
                         fmsOnTime++;
@@ -734,20 +710,16 @@ public class EmployeeController {
                     fmsOnTime++;
                 }
             }
-            // Rule 5: If the task is Overdue → ATS = 0
+
             if (fmsOverdueCount > 0) {
-                fmsAtsTotalScore += 0;
                 fmsAtsCount += fmsOverdueCount;
             }
 
             int fmsTotal = fmsInProgress + fmsOverdueCount + fmsCompletedTasks.size();
             int otcPercent = fmsTotal > 0 ? (fmsOnTime * 100 / fmsTotal) : 0;
-            String atsDisplay = fmsAtsCount > 0
-                    ? String.format("%.0f%%", fmsAtsTotalScore / fmsAtsCount)
-                    : "-";
+            String atsDisplay = fmsAtsCount > 0 ? String.format("%.0f%%", fmsAtsTotalScore / fmsAtsCount) : "-";
 
-            // Build chart data for donut chart
-            java.util.List<Map<String, Object>> chartData = new java.util.ArrayList<>();
+            List<Map<String, Object>> chartData = new ArrayList<>();
             if (fmsOnTime > 0)
                 chartData.add(Map.of("name", "On Time", "value", fmsOnTime, "color", "#22c55e"));
             if (fmsDelayed > 0)
@@ -755,7 +727,7 @@ public class EmployeeController {
             if (fmsOverdueCount > 0)
                 chartData.add(Map.of("name", "Overdue", "value", fmsOverdueCount, "color", "#ef4444"));
 
-            Map<String, Object> fmsDashboardStats = new java.util.HashMap<>();
+            Map<String, Object> fmsDashboardStats = new HashMap<>();
             fmsDashboardStats.put("totalTasks", fmsTotal);
             fmsDashboardStats.put("onTime", fmsOnTime);
             fmsDashboardStats.put("overdue", fmsOverdueCount);
@@ -766,8 +738,6 @@ public class EmployeeController {
             fmsDashboardStats.put("chart_data", chartData);
             fmsDashboardStats.put("otc_score", otcPercent + "%");
             model.addAttribute("dashboardStats", fmsDashboardStats);
-            // ─────────────────────────────────────────────────────────────────────────
-
         }
 
         return "employee-fms-folder";
@@ -867,31 +837,6 @@ public class EmployeeController {
         String safeOrder = orderId == null ? "" : orderId.trim();
         String safeStart = startDate == null ? "" : startDate.trim();
 
-        // Sync responsible persons from planning form back to folder process config
-        // so Admin FMS screens reflect the same latest ownership.
-        if (responsiblePersons != null && !responsiblePersons.isEmpty()) {
-            O2DConfig config = o2dConfigRepository.findById(safeFolder).orElse(null);
-            if (config != null && config.getProcessDetails() != null && !config.getProcessDetails().isEmpty()) {
-                boolean updated = false;
-                int limit = Math.min(config.getProcessDetails().size(), responsiblePersons.size());
-                for (int i = 0; i < limit; i++) {
-                    String postedResp = responsiblePersons.get(i) == null ? "" : responsiblePersons.get(i).trim();
-                    if (postedResp.isBlank()) {
-                        continue;
-                    }
-                    ProcessStep step = config.getProcessDetails().get(i);
-                    String currentResp = step.getResponsiblePerson() == null ? "" : step.getResponsiblePerson().trim();
-                    if (!postedResp.equals(currentResp)) {
-                        step.setResponsiblePerson(postedResp);
-                        updated = true;
-                    }
-                }
-                if (updated) {
-                    o2dConfigRepository.save(config);
-                }
-            }
-        }
-
         // 1. Save Planning Entry
         if (!safeStart.isBlank()) {
             PlanningEntry planningEntry = new PlanningEntry();
@@ -918,6 +863,23 @@ public class EmployeeController {
                 planningEntry.setStepTargetDates(stepTargetDates);
             }
 
+            // Correct handling of responsible persons: Save ONLY into PlanningEntry
+            if (cfgForTargets != null && cfgForTargets.getProcessDetails() != null
+                    && responsiblePersons != null && !responsiblePersons.isEmpty()) {
+                Map<String, String> stepResps = new LinkedHashMap<>();
+                int limit = Math.min(cfgForTargets.getProcessDetails().size(), responsiblePersons.size());
+                for (int i = 0; i < limit; i++) {
+                    ProcessStep step = cfgForTargets.getProcessDetails().get(i);
+                    if (step == null || step.getStepProcess() == null)
+                        continue;
+                    String postedResp = responsiblePersons.get(i) == null ? "" : responsiblePersons.get(i).trim();
+                    if (!postedResp.isBlank()) {
+                        stepResps.put(step.getStepProcess(), postedResp);
+                    }
+                }
+                planningEntry.setStepResponsiblePersons(stepResps);
+            }
+
             planningEntry.setCreatedAt(Instant.now());
             planningEntryRepository.save(planningEntry);
 
@@ -941,7 +903,9 @@ public class EmployeeController {
         }
 
         // Redirect back to planning result so the updated Time Stamp is visible
-        if (!safeOrder.isBlank()) {
+        if (!safeOrder.isBlank())
+
+        {
             return "redirect:/employee/planning-result?folderId=" + safeFolder + "&planOrderId=" + safeOrder;
         }
         return "redirect:/employee/order-entry?folderId=" + safeFolder;

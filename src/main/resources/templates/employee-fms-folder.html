@@ -1219,32 +1219,6 @@
             <!-- ACTION BAR -->
             <div class="action-bar">
                 <div class="action-bar-left">
-                    <button class="action-btn secondary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                        FILTER
-                    </button>
-                    <button class="action-btn secondary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 8H3"></path>
-                            <path d="M10 12V16"></path>
-                            <path d="M14 12V16"></path>
-                            <path d="M19 8v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8"></path>
-                            <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3H9V5z"></path>
-                        </svg>
-                        BULK ASSIGN
-                    </button>
-                    <button class="action-btn primary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        ASSIGN
-                    </button>
                 </div>
                 <div class="search-wrapper">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1258,7 +1232,7 @@
             <!-- FMS PENDING TASKS BY PROCESS STEP -->
             <th:block th:if="${currentFolder != null and currentFolder.processDetails != null}">
                 <div class="table-container" th:each="step,iter : ${currentFolder.processDetails}"
-                    th:if="${step.responsiblePerson != null and (#authentication.name == 'admin' or #authentication.name == 'superadmin' or #strings.toLowerCase(step.responsiblePerson) == #strings.toLowerCase(#authentication.name))}">
+                    th:if="${#authentication.name == 'admin' or #authentication.name == 'superadmin' or (fmsPendingTasksByStep != null and fmsPendingTasksByStep[step.stepProcess] != null and !fmsPendingTasksByStep[step.stepProcess].isEmpty())}">
                     <div class="table-header">
                         <h3 th:text="${'STEP ' + (iter.index + 1) + ': ' + step.stepProcess}">STEP 1: Process</h3>
                         <div class="table-header-actions">
@@ -1404,67 +1378,8 @@
         </div>
     </div>
 
-    <!-- ASSIGN TASK MODAL -->
-    <div class="modal-overlay" id="assignModal">
-        <div class="modal">
-            <div class="modal-header" style="background: #1e293b;">
-                <h2>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    Assign New Task
-                </h2>
-                <button class="modal-close" onclick="closeAssignModal()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="assignForm">
-                    <div class="form-group">
-                        <label class="form-label">Task Name</label>
-                        <input type="text" class="form-control" id="assignTaskName" placeholder="Enter task name..."
-                            required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Client</label>
-                        <input type="text" class="form-control" id="assignClient" placeholder="Enter Client Name"
-                            required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Project</label>
-                        <input type="text" class="form-control" id="assignProject" placeholder="Enter Project Name"
-                            required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Assigned To</label>
-                        <select class="form-control" id="assignUser" required>
-                            <option value="">Select Team Member</option>
-                            <option th:each="emp : ${allEmployees}" th:value="${emp.name}" th:text="${emp.name}">
-                                Employee
-                                Name</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Target Date</label>
-                        <input type="date" class="form-control" id="assignDate" required>
-                    </div>
-                    <div class="form-group mb-0">
-                        <label class="form-label">Attachment (Optional)</label>
-                        <input type="file" class="form-control" id="assignFile">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="modal-btn secondary" onclick="closeAssignModal()">Cancel</button>
-                <button type="submit" form="assignForm" class="modal-btn primary"
-                    style="background: #1e293b;">Confirm</button>
-            </div>
-        </div>
-    </div>
+
+    <!-- SCRIPTS -->
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -1477,11 +1392,6 @@
             initChart();
             handleUrlParams();
 
-            // Setup Form Listeners
-            const assignForm = document.getElementById('assignForm');
-            if (assignForm) {
-                assignForm.addEventListener('submit', handleAssignSubmit);
-            }
 
             const completeForm = document.getElementById('completeForm');
             if (completeForm) {
@@ -1671,64 +1581,6 @@
             document.getElementById('completeModal').classList.remove('show');
         }
 
-        function openAssignModal(forSelf = false) {
-            document.getElementById('assignModal').classList.add('show');
-            if (forSelf && typeof userName !== 'undefined') {
-                const select = document.getElementById('assignUser');
-                // Select option by text (name)
-                // Since values are names now, we can set the value directly
-                select.value = userName;
-
-                // If direct value assignment fails (e.g. case sensitivity), try finding option
-                for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].text.toLowerCase() === userName.toLowerCase()) {
-                        select.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
-        }
-
-        function closeAssignModal() {
-            document.getElementById('assignModal').classList.remove('show');
-        }
-
-        // HANDLE ASSIGN SUBMIT
-        async function handleAssignSubmit(e) {
-            e.preventDefault();
-
-            const formData = new FormData();
-            formData.append('title', document.getElementById('assignTaskName').value);
-            formData.append('clientName', document.getElementById('assignClient').value);
-            formData.append('projectName', document.getElementById('assignProject').value);
-            formData.append('assignedToName', document.getElementById('assignUser').value); // Send Name as ID/Name
-            formData.append('targetDate', document.getElementById('assignDate').value);
-
-            const fileInput = document.getElementById('assignFile');
-            if (fileInput.files.length > 0) {
-                formData.append('file', fileInput.files[0]);
-            }
-
-            try {
-                const response = await fetch('/employee/task-manager/api/tasks', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert('Task assigned successfully!');
-                    closeAssignModal();
-                    // Reload page to show new task (or fetch via AJAX)
-                    window.location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Error assigning task: ' + (error.error || 'Unknown error'));
-                }
-            } catch (err) {
-                console.error('Error:', err);
-                alert('Failed to assign task.');
-            }
-        }
 
         // SELECT ALL CHECKBOXES FOR FMS PENDING TASKS
         function selectAllFmsPending(selectAllCheckbox) {
